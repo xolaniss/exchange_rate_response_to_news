@@ -12,18 +12,16 @@ eme_surprises_tbl <-
   read_excel(here("Data", "EME_surprises_all.xlsx")) |> 
   janitor::clean_names() |> 
   mutate(release_date = lubridate::parse_date_time(release_date, orders = "m/d/Y"),
-         estimation_date = lubridate::parse_date_time(estimation_date, orders = "m/d/Y")) 
+         estimation_date = lubridate::parse_date_time(estimation_date, orders = "m/d/Y")) |> 
+  mutate(surprise = median_estimate - actual) |> 
+  select(event, ticker, period, release_date, estimation_date, median_estimate, actual, surprise)
 
-# Transformations --------------------------------------------------------
-## Come back ones its clear what to do with the data
+# need to choose events
 
 # EDA ---------------------------------------------------------------
 eme_surprises_tbl |> 
   group_by(event) |> 
   skim()
-
-# Graphing ---------------------------------------------------------------
-
 
 # Export ---------------------------------------------------------------
 artifacts_eme_surprises <- list (
