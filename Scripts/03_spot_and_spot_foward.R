@@ -20,7 +20,7 @@ zarusd_spot_tbl <-
   spot_data |> 
   pluck(1) |> 
   rename(date = "ZAR=...1", spot = "ZAR=...2") |> 
-  arrange(date) # need to limit hours
+  arrange(date) 
 
 
 zarusd_spot_forwards_tbl <- 
@@ -48,10 +48,11 @@ zarusd_common_tbl <- reduce(series_list, inner_join, by = "date") |>
   left_join(zarusd_spot_tbl, by = "date") |> 
   drop_na() |> 
   relocate(spot, .before = "fwd1m")
-  
+
+# need to limit hours to business hours
 
 # Export ---------------------------------------------------------------
-artifacts_spot_and_spot_forwards <- list (
+artifacts_spot_and_spot_forwards <- list ( 
   zarusd_common_tbl = zarusd_common_tbl
 )
 
