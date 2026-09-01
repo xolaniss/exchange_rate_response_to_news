@@ -1,5 +1,5 @@
 # Description
-# Spot and spot foward data - 1 year August 2026
+# Spot and spot forward data - 1 year August 2026 - hourly
 # Preliminaries -----------------------------------------------------------
 library(here)
 
