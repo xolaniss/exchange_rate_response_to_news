@@ -52,10 +52,10 @@ zarusd_common_tbl <- reduce(series_list, inner_join, by = "date") |>
 # need to limit hours to business hours
 
 # Export ---------------------------------------------------------------
-artifacts_spot_and_spot_forwards <- list ( 
+artifacts_spot_and_spot_forwards_hourly <- list ( 
   zarusd_common_tbl = zarusd_common_tbl
 )
 
-write_rds(artifacts_spot_and_spot_forwards, file = here("Outputs", "artifacts_spot_spot_forwards.rds"))
+write_rds(artifacts_spot_and_spot_forwards_hourly, file = here("Outputs", "artifacts_spot_spot_forwards_hourly.rds"))
 
 
