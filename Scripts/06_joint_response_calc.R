@@ -9,7 +9,7 @@ source(here("packages.R"))
 source(here("Functions", "fx_plot.R"))
 
 # Import -------------------------------------------------------------
-differential_tbl <- read_rds(here("Outputs", "artifacts_rate_differential.rds")) |> 
+ois_tbl <- read_rds(here("Outputs", "artifacts_interest_rate.rds")) |> 
   pluck(1)
 
 spot_forward_tbl <- read_rds(here("Outputs", "artifacts_spot_and_spot_forwards_daily.rds")) |> 
@@ -19,38 +19,28 @@ spot_forward_tbl <- read_rds(here("Outputs", "artifacts_spot_and_spot_forwards_d
 # Combine ------------------------------
 combined_tbl <- 
   spot_forward_tbl |> 
-  inner_join(differential_tbl, by = "date") 
+  inner_join(ois_tbl, by = "date") 
   
 
-# First approach - uncovered interest rate parity -------------------------
-combined_tbl |> 
+# model data -------------------------
+model_data_tbl <- 
+  combined_tbl |> 
   mutate(
-    ln_spot  = log(spot),
-    change_differential = differential - lag(differential),
-    across(starts_with("forward"), ~ .x - lag(.x, 1), .names = "change_{.col}"),
-    change_spot = change_differential + change_forward_1Y, # assuming zero risk premium,
-    synthetic_forward_rate = spot *((1 + us_policy_rate)/(1 + sa_policy_rate))
+    ln_spot = log(spot),
+    change_ln_spot = ln_spot - lag(ln_spot, 1),
+    change_ois_2y = 2*(sa_ois_2y - us_ois_2y),
+    change_ois_5y = 5*(sa_ois_5y - us_ois_5y),
+    change_forward_2y = change_ln_spot - change_ois_2y,
+    change_forward_5y = change_ln_spot - change_ois_5y
   ) |> 
-  glimpse()
-
-  
-  
-
-
-# Transformations --------------------------------------------------------
-
-
-# EDA ---------------------------------------------------------------
-
-
-# Graphing ---------------------------------------------------------------
+  drop_na()
 
 
 # Export ---------------------------------------------------------------
-artifacts_ <- list (
-
+artifacts_model_data <- list (
+  model_data_tbl = model_data_tbl
 )
 
-write_rds(artifacts_, file = here("Outputs", "artifacts_.rds"))
+write_rds(artifacts_model_data, file = here("Outputs", "artifacts_model_data.rds"))
 
 
