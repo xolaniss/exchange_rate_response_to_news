@@ -13,8 +13,15 @@ eme_surprises_tbl <-
   janitor::clean_names() |> 
   mutate(release_date = lubridate::parse_date_time(release_date, orders = "m/d/Y"),
          estimation_date = lubridate::parse_date_time(estimation_date, orders = "m/d/Y")) |> 
-  mutate(surprise = median_estimate - actual) |> 
-  select(event, ticker, period, release_date, estimation_date, median_estimate, actual, surprise)
+  group_by(event, ticker, release_date) |> 
+  summarise(
+    median_estimate = median(median_estimate),
+    actual = median(actual),
+    surprise = median_estimate - actual,
+    .groups = "drop"
+  ) |> 
+  arrange(event, release_date) |> 
+  select(event, ticker, release_date, surprise)
 
 # need to choose events
 

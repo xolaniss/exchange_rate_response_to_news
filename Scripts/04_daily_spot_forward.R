@@ -42,7 +42,7 @@ spot_forward_tbl <-
     ZAR5Y = 6
   ) |> 
   mutate(across(everything(), as.numeric)) |> 
-  mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) |> tail()
+  mutate(date = as.Date(as.numeric(date), origin = "1899-12-30")) 
 
 # Outright forward rates ----------------------------------------------
 # Forward = spot + swap points, points quoted per 10,000 (4 decimal pips)

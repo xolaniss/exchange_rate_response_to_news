@@ -1,5 +1,5 @@
 # Description
-# Two approaches to calculating joint response to news - Xolani 01 September 
+# joint response to news variables - Xolani 01 September 
 
 # Preliminaries -----------------------------------------------------------
 library(here)
@@ -23,7 +23,7 @@ combined_tbl <-
   
 
 # model data -------------------------
-model_data_tbl <- 
+joint_response_data_tbl <- 
   combined_tbl |> 
   mutate(
     ln_spot = log(spot),
@@ -37,10 +37,10 @@ model_data_tbl <-
 
 
 # Export ---------------------------------------------------------------
-artifacts_model_data <- list (
-  model_data_tbl = model_data_tbl
+artifacts_joint_response_data <- list (
+  joint_response_data_tbl = joint_response_data_tbl 
 )
 
-write_rds(artifacts_model_data, file = here("Outputs", "artifacts_model_data.rds"))
+write_rds(artifacts_joint_response_data, file = here("Outputs", "artifacts_joint_response_data.rds"))
 
 
