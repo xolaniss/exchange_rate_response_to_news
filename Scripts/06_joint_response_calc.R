@@ -27,7 +27,7 @@ joint_response_data_tbl <-
   combined_tbl |> 
   mutate(
     ln_spot = log(spot),
-    change_ln_spot = ln_spot - lag(ln_spot, 1),
+    change_ln_spot = (ln_spot - lag(ln_spot, 1))*100,
     change_ois_2y = 2*(sa_ois_2y - us_ois_2y),
     change_ois_5y = 5*(sa_ois_5y - us_ois_5y),
     change_forward_2y = change_ln_spot - change_ois_2y,

@@ -13,6 +13,7 @@ eme_surprises_tbl <-
   janitor::clean_names() |> 
   mutate(release_date = lubridate::parse_date_time(release_date, orders = "m/d/Y"),
          estimation_date = lubridate::parse_date_time(estimation_date, orders = "m/d/Y")) |> 
+  filter(startsWith(ticker, "SA")) |> 
   group_by(event, ticker, release_date) |> 
   summarise(
     median_estimate = median(median_estimate),
