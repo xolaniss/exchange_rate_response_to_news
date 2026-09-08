@@ -28,8 +28,10 @@ news_models <-
              "change_ln_spot_models" = "change_ln_spot",
              "change_ois_2y_models" = "change_ois_2y",
              "change_ois_5y_models" = "change_ois_5y",
+             "change_ois_10y_models" = "change_ois_10y",
              "change_forward_2y_models" = "change_forward_2y",
-             "change_forward_5y_models" = "change_forward_5y"
+             "change_forward_5y_models" = "change_forward_5y",
+             "change_forward_10y_models" = "change_forward_10y"
            )) {
     surprises |> 
       purrr::map(function(surprise) {
@@ -67,8 +69,10 @@ data_releases_models_tbl <-
     "change_ln_spot_models" = "change_ln_spot",
     "change_ois_2y_models" = "change_ois_2y",
     "change_ois_5y_models" = "change_ois_5y",
+    "change_ois_10y_models" = "change_ois_10y",
     "change_forward_2y_models" = "change_forward_2y",
-    "change_forward_5y_models" = "change_forward_5y"
+    "change_forward_5y_models" = "change_forward_5y",
+    "change_forward_10y_models" = "change_forward_10y"
   )
 )
 

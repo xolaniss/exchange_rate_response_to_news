@@ -11,7 +11,16 @@ source(here("Functions", "fx_plot.R"))
 joint_response_data_tbl <- 
   read_rds(here("Outputs", "artifacts_joint_response_data.rds")) |> 
   pluck(1) |> 
-  select(date, change_ln_spot, change_ois_2y, change_ois_5y, change_forward_2y, change_forward_5y)
+  select(
+    date,
+    change_ln_spot,
+    change_ois_2y,
+    change_ois_5y,
+    change_ois_10y,
+    change_forward_2y,
+    change_forward_5y,
+    change_forward_10y
+  )
 sa_market_surprises_tbl <- 
   read_rds(here("Outputs", "artifacts_market_based_surprises.rds")) |> 
   pluck(1) |> 
@@ -23,10 +32,9 @@ eme_surprise_tbl <- read_rds(here("Outputs", "artifacts_eme_surprises.rds")) |>
   rename(date = release_date) |>
   mutate(date = as.Date(date)) |>
   pivot_wider(id_cols = date, names_from = event, values_from = surprise) |> 
-  select(-starts_with("SARB"))
+  select(-starts_with("SARB")) |> 
+  arrange(date) 
 
-  eme_surprise_tbl |> 
-    skim()
 # Graphs -------------------------------------
 ## joint response ----
 joint_response_data_tbl |> 
@@ -48,9 +56,11 @@ sa_market_surprises_tbl |>
 ## eme surprises ----
 eme_surprise_tbl |> 
   pivot_longer(-date, names_to = "variable", values_to = "value") |> 
+  drop_na(value) |> 
   ggplot(aes(x = date, y = value)) +
+  geom_point(size = 1) +
   geom_line() +
-  facet_wrap(~ variable, scales = "free_y", ncol = 2) +
+  facet_wrap(~ variable, scales = "free", ncol = 2) +
   theme_minimal()
 
 # Reducing to announcement days -------------------------
