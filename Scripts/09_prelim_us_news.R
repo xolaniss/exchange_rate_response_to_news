@@ -23,7 +23,8 @@ us_mpc_surprises_models <- news_models(us_mpc_announcement_days_tbl,
                                          "central_bank_information_models" = "jaracinski_cbi",
                                          "lsap_models"                     = "jaracinski_lsap"
                                        ))  |> 
-  mutate(across(-c(surprise_type, model, term), ~ round(.x, 9)))
+  mutate(across(-c(surprise_type, model, term), ~ round(.x, 9))) |> 
+  filter(!term == "(Intercept)")
 
 us_mpc_surprises_models |>  print(n = 100)
 

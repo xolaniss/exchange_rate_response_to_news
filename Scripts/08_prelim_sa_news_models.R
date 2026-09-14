@@ -16,7 +16,8 @@ model_data <- read_rds(here("Outputs", "artifacts_model_data.rds"))
 # MPC models  -----------------------------------------------------------------
 mpc_announcement_days_tbl <- model_data |>  pluck(1)
 mpc_surprises_models <- news_models(mpc_announcement_days_tbl)  |> 
-  mutate(across(-c(surprise_type, model, term), ~ round(.x, 9)))
+  mutate(across(-c(surprise_type, model, term), ~ round(.x, 9))) |> 
+  filter(!term == "(Intercept)")
 mpc_surprises_models |>  print(n = 100)
 
 mpc_surprises_models |> 
@@ -79,6 +80,7 @@ data_releases_models_tbl <-
 
 data_releases_models_tbl |> 
   mutate(across(-c(surprise_type, model, term), ~ round(.x, 9))) |> 
+  filter(!term == "(Intercept)") |> 
   print(n = 200)
 
 
