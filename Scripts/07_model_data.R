@@ -35,6 +35,14 @@ eme_surprise_tbl <- read_rds(here("Outputs", "artifacts_eme_surprises.rds")) |>
   select(-starts_with("SARB")) |> 
   arrange(date) 
 
+us_surprises_tbl <- read_rds(here("Outputs", "artifacts_us_surprises.rds")) |> 
+  pluck(1) |> 
+  janitor::clean_names() |> 
+  select(
+    date,
+    starts_with("jaracinski")
+  )
+
 # Graphs -------------------------------------
 ## joint response ----
 joint_response_data_tbl |> 
@@ -55,6 +63,17 @@ sa_market_surprises_tbl |>
 
 ## eme surprises ----
 eme_surprise_tbl |> 
+  pivot_longer(-date, names_to = "variable", values_to = "value") |> 
+  drop_na(value) |> 
+  ggplot(aes(x = date, y = value)) +
+  geom_point(size = 1) +
+  geom_line() +
+  facet_wrap(~ variable, scales = "free", ncol = 2) +
+  theme_minimal()
+
+
+## us surprises ----
+us_surprises_tbl |> 
   pivot_longer(-date, names_to = "variable", values_to = "value") |> 
   drop_na(value) |> 
   ggplot(aes(x = date, y = value)) +
@@ -91,12 +110,24 @@ news_announcement_days_tbl |>
   geom_line() +
   facet_wrap(~ variable, scales = "free_y", ncol = 2) +
   theme_minimal()
+
+us_mpc_announcement_days_tbl <- 
+  us_surprises_tbl |> 
+  inner_join(joint_response_data_tbl, by = "date") 
   
+
+us_mpc_announcement_days_tbl |> 
+  pivot_longer(-date, names_to = "variable", values_to = "value") |> 
+  ggplot(aes(x = date, y = value)) +
+  geom_line() +
+  facet_wrap(~ variable, scales = "free_y", ncol = 2) +
+  theme_minimal()
   
 # Export ---------------------------------------------------------------
 artifacts_model_data <- list (
  mpc_announcement_days_tbl = mpc_announcement_days_tbl,
- news_announcement_days_tbl = news_announcement_days_tbl
+ news_announcement_days_tbl = news_announcement_days_tbl,
+ us_mpc_announcement_days_tbl = us_mpc_announcement_days_tbl
 )
 
 write_rds(artifacts_model_data , file = here("Outputs", "artifacts_model_data.rds"))

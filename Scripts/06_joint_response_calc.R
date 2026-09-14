@@ -33,7 +33,8 @@ joint_response_data_tbl <-
     change_ois_10y = 10*(sa_ois_10y - us_ois_10y),
     change_forward_2y = change_ln_spot - change_ois_2y,
     change_forward_5y = change_ln_spot - change_ois_5y,
-    change_forward_10y = change_ln_spot - change_ois_10y
+    change_forward_10y = change_ln_spot - change_ois_10y,
+    
   ) |> 
   drop_na()
 
