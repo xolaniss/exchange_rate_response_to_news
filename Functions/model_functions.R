@@ -98,3 +98,80 @@ residual_models <-
       }) |> 
       dplyr::bind_rows(.id = "surprise_type")
   }
+
+spot_undecomposed_models <- 
+  function(decomposition_data, data, spot_var = "change_ln_spot") {
+    
+    spot_data <- data |> 
+      dplyr::select(date, spot = dplyr::all_of(spot_var))
+    
+    # actual OIS is the same regardless of surprise_type so only one pass needed
+    decomposition_data |> 
+      dplyr::distinct(model, date, actual) |> 
+      split(~model) |> 
+      purrr::map(function(model_group) {
+        model_group |> 
+          dplyr::select(date, actual) |> 
+          dplyr::inner_join(spot_data, by = "date") |> 
+          lm(spot ~ actual, data = _) |> 
+          robust_model()
+      }) |> 
+      dplyr::bind_rows(.id = "model")
+  }
+
+spot_component_models <- 
+  function(decomposition_data, data, spot_var = "change_ln_spot") {
+    
+    spot_data <- data |> 
+      dplyr::select(date, spot = dplyr::all_of(spot_var))
+    
+    decomposition_data |> 
+      split(~surprise_type) |> 
+      purrr::map(function(surprise_group) {
+        surprise_group |> 
+          split(~model) |> 
+          purrr::map(function(model_group) {
+            
+            model_group |> 
+              dplyr::select(date, predictable, unpredictable) |> 
+              dplyr::inner_join(spot_data, by = "date") |> 
+              lm(spot ~ predictable + unpredictable, data = _) |> 
+              robust_model()
+          }) |> 
+          dplyr::bind_rows(.id = "model")
+      }) |> 
+      dplyr::bind_rows(.id = "surprise_type")
+  }
+
+decompose_ois <- 
+  function(data,
+           surprises = c(
+             "target_models"                   = "target",
+             "forward_guidance_models"         = "forward_guidance",
+             "central_bank_information_models" = "central_bank_information",
+             "country_risk_models"             = "country_risk"
+           ),
+           # Default to OIS tenors only — the series being decomposed
+           predictors = c(
+             "change_ois_2y_models"  = "change_ois_2y",
+             "change_ois_5y_models"  = "change_ois_5y",
+             "change_ois_10y_models" = "change_ois_10y"
+           )) {
+    surprises |> 
+      purrr::map(function(surprise) {
+        predictors |> 
+          purrr::map(function(predictor) {
+            lm(data = data, formula = reformulate(surprise, predictor)) |> 
+              broom::augment(data = data) |> 
+              dplyr::select(
+                dplyr::any_of("date"),
+                actual        = dplyr::all_of(predictor),
+                predictable   = .fitted,    # news-explained component
+                unpredictable = .resid      # unexplained component
+              )
+          }) |> 
+          dplyr::bind_rows(.id = "model")
+      }) |> 
+      dplyr::bind_rows(.id = "surprise_type")
+  }
+
