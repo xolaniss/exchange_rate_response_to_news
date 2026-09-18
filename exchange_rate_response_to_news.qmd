@@ -96,6 +96,27 @@ source(here("Functions","modelplot_word.R" ))
 source(here("Functions","borderlines.R" ))
 ```
 
+```{r}
+sa_news_models_tbl <- 
+  read_rds(here("Outputs", "artifacts_sa_news_models.rds")) |> 
+  pluck(1)
+sa_resids_models_tbl <- 
+  read_rds(here("Outputs", "artifacts_sa_residual_models.rds")) |> 
+  pluck(2)
+us_news_models <- 
+  read_rds(here("Outputs", "artifacts_us_news_models.rds"))
+us_resids_models <- 
+  read_rds(here("Outputs", "artifacts_us_residual_models.rds"))
+
+interest_rate_diff_models <- 
+  read_rds(here("Outputs", "artifacts_differntial_models.rds"))
+
+
+```
+
+
+
+
 # Introduction
 
 @fornero2011effect 
@@ -105,6 +126,111 @@ source(here("Functions","borderlines.R" ))
 # Data and methodology
 
 # Results
+
+
+```{r}
+
+pretty_table <- function(tbl, surprise = "target_models", surprise_exist = 1, label = NULL) {
+  
+  result <- tbl
+  
+  if (surprise_exist == 1) {
+    result <- result |> filter(surprise_type == surprise)
+  }
+  
+  result <- result |>
+    rename(any_of(c(model = "predictor_model"))) |>
+    filter(term != "(Intercept)") |>
+    select(model, term, estimate, std.error, p.value) |>
+    mutate(
+      stars     = ifelse(p.value < 0.01, "***",
+                  ifelse(p.value < 0.05, "**",
+                  ifelse(p.value < 0.1,  "*", ""))),
+      estimate  = round(estimate,  4),
+      std.error = round(std.error, 4)
+    ) |>
+    mutate(estimate = paste0(estimate, stars, "\n(", std.error, ")")) |>
+    select(-p.value, -stars, -std.error)
+  
+  if (!is.null(label)) result <- result |> mutate(source = label, .before = 1)
+  
+  result
+}
+
+combined_table <- function(surprise = "target_models") {
+  
+  # Pre-process decomposed table: split predictable/unpredictable into
+  # separate source labels so each model has one row per source
+  decomposed <- interest_rate_diff_models |> 
+    pluck(1) |> 
+    pretty_table(surprise = surprise)
+  
+  sa_news <- sa_news_models_tbl |> 
+    pretty_table(surprise = surprise, label = "SA News") |>
+    pivot_wider(id_cols = model, names_from = source, values_from = estimate)
+
+  sa_resids <- sa_resids_models_tbl |>
+    pretty_table(surprise = surprise, label = "SA Residuals") |>
+    pivot_wider(id_cols = model, names_from = source, values_from = estimate)
+
+  main <- bind_rows(
+    decomposed |> filter(term == "unpredictable") |> mutate(source = "SA Residuals"),
+    decomposed |> filter(term == "predictable")   |> mutate(source = "Decomposed")
+  ) |>
+    pivot_wider(id_cols = model, names_from = source, values_from = estimate)
+
+  undecomposed <- interest_rate_diff_models |> 
+    pluck(2) |> 
+    pretty_table(surprise_exist = 0, label = "Undecomposed") |>
+    pivot_wider(id_cols = model, names_from = source, values_from = estimate)
+
+  bind_rows(sa_news, sa_resids, main, undecomposed) |>
+    mutate(
+      group_var = if_else(str_detect(model, "spot"),  "Spot",
+                  if_else(str_detect(model, "2y"),    "2-year Rates",
+                  if_else(str_detect(model, "5y"),    "5-year Rates",
+                  if_else(str_detect(model, "10y"),   "10-year Rates", "Other"))))
+    ) |>
+    relocate(group_var, .after = model) |>
+    group_by(group_var) |> 
+    arrange(model, .by_group = TRUE) |> 
+    as_grouped_data(groups = "group_var") |> 
+    flextable()
+}
+
+```
+
+
+
+```{r}
+
+tables <- 
+  c("target_models", "forward_guidance_models", "central_bank_information_models", "country_risk_models") |>
+  set_names() |> 
+  map(~combined_table(.x))
+
+tables[[1]] 
+  
+```
+
+
+
+```{r}
+tables[[2]] 
+```
+
+
+
+```{r}
+tables[[3]]
+```
+
+
+
+```{r}
+tables[[4]]
+```
+
 
 # Conclusion
 

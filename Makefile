@@ -17,7 +17,8 @@ all: \
 	$(OUT)/artifacts_sa_news_models.rds \
 	$(OUT)/artifacts_sa_residual_models.rds \
 	$(OUT)/artifacts_us_news_models.rds \
-	$(OUT)/artifacts_us_residual_models.rds
+	$(OUT)/artifacts_us_residual_models.rds \
+	$(OUT)/artifacts_differntial_models.rds
 
 paper: all
 	quarto render exchange_rate_response_to_news.qmd
@@ -80,6 +81,12 @@ $(OUT)/artifacts_us_news_models.rds: \
 
 $(OUT)/artifacts_us_residual_models.rds: \
 	Scripts/11_us_residual_models.R \
+	$(OUT)/artifacts_model_data.rds \
+	$(MODEL_FNS) $(SHARED)
+	Rscript $<
+
+$(OUT)/artifacts_differntial_models.rds: \
+	Scripts/12_interest_rate_models.R \
 	$(OUT)/artifacts_model_data.rds \
 	$(MODEL_FNS) $(SHARED)
 	Rscript $<
