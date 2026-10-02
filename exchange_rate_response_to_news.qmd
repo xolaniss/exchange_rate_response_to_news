@@ -53,7 +53,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       fig.env= 'figure', 
                       tab.topcaption = TRUE,
                       ft.align = "left",
-                      ft.arraystretch = 0.5
+                      ft.arraystretch = -1
                       )
 library(tidyverse)
 library(readr)
@@ -115,11 +115,9 @@ interest_rate_diff_models <-
 ```
 
 
-
-
 # Introduction
 
-@fornero2011effect 
+@coleman2012
 
 # Literature review
 
@@ -200,35 +198,53 @@ combined_table <- function(surprise = "target_models") {
 
 ```
 
-
+\newpage
 
 ```{r}
+#| label: tbl-target
+#| fig.cap: "Response to Target"
+
+
 
 tables <- 
   c("target_models", "forward_guidance_models", "central_bank_information_models", "country_risk_models") |>
   set_names() |> 
   map(~combined_table(.x))
 
-tables[[1]] 
+tables[[1]] |> 
+  autofit(add_w = 0.1)
   
 ```
 
-
+\newpage
 
 ```{r}
-tables[[2]] 
+#| label: tbl-forward
+#| fig.cap: "Response to forward"
+
+tables[[2]] |> 
+  autofit(add_w = 0.1)
+```
+
+\newpage
+
+```{r}
+#| label: tbl-information
+#| fig.cap: "Response to information"
+
+tables[[3]] |> 
+  autofit(add_w = 0.1)
 ```
 
 
+\newpage
 
 ```{r}
-tables[[3]]
-```
+#| label: tbl-risk
+#| fig.cap: "Response to risk"
 
-
-
-```{r}
-tables[[4]]
+tables[[4]] |> 
+  autofit(add_w = 0.1)
 ```
 
 
@@ -256,34 +272,7 @@ tables[[4]]
 ## Data
 
 
-```{r}
-#| label: latex_version
-#| warning: FALSE
-#| message: FALSE
-
-# Packages -----------------------------------------------------------
-library(here)
-library(tidyverse)
-library(fs)
 
 
-# Delete current latex folder ----------------------------------------
-if (dir.exists(here("Latex_version"))) {
-  dir_delete(here("Latex_version"))
-}
 
-# Create folder ------------------------------------------------------
-dir.create(here("Latex_version"), recursive = TRUE)
 
-# Copy text files ---------------------------------------------------------
-list.files(path = ".", pattern = "tex", full.names = TRUE ) %>%
-  file.copy(to = here("Latex_version"), overwrite = TRUE)
-file.copy(here("references.bib"), here("Latex_version"), overwrite = TRUE)
-
-# Copy resources folder ---------------------------------------------
-folder_path <- list.dirs(path = ".", recursive = FALSE) %>%
-  str_subset("files")
-folder_name <- str_remove(folder_path, "./")
-dir_copy(folder_path, here("Latex_version", folder_name), overwrite = TRUE)
-
-```

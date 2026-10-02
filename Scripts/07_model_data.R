@@ -86,7 +86,8 @@ us_surprises_tbl |>
 
 ## MPC announcement days ----
 mpc_announcement_days_tbl <- 
-  sa_market_surprises_tbl |> 
+  sa_market_surprises_tbl |>
+  mutate(across(-date, ~ .x / 100)) |>   # convert surprises from bps to pp
   inner_join(joint_response_data_tbl, by = "date")
   # inner_join(eme_surprise_tbl, by = "date") we don't have releases on announcement
 

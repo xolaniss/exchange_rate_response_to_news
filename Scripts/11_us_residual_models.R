@@ -60,6 +60,46 @@ us_scatter_plot_data_tbl <-
     surprise_type = str_replace_all(surprise_type, "_", " ") |> str_to_title()
   )
 
+
+us_residual_models_tbl |> 
+  rename("model" = predictor_model) |> 
+  filter(term != "(Intercept)") |> 
+  mutate(
+    surprise_type = str_remove(surprise_type, "_models$"),
+    model         = str_remove(model, "_models$"),
+    var_type = case_when(
+      str_detect(model, "ois")     ~ "Interest rate differential",
+      str_detect(model, "forward") ~ "Forward rate",
+      TRUE                          ~ "Spot rate"
+    ),
+    tenor = case_when(
+      str_detect(model, "2y")  ~ "2Y",
+      str_detect(model, "5y")  ~ "5Y",
+      str_detect(model, "10y") ~ "10Y",
+      TRUE                      ~ "Spot"
+    ),
+    tenor     = fct_relevel(tenor, "Spot", "2Y", "5Y", "10Y"),
+    ci_low    = estimate - 1.96 * std.error,
+    ci_high   = estimate + 1.96 * std.error,
+    sig_level = case_when(
+      p.value < 0.05 ~ "p < 0.05",
+      p.value < 0.10 ~ "p < 0.10",
+      TRUE           ~ "n.s."
+    ),
+    sig_level = fct_relevel(sig_level, "p < 0.05", "p < 0.10", "n.s.")
+  ) |> 
+  ggplot(aes(x = tenor, y = estimate, color = sig_level, group = surprise_type)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(ymin = ci_low, ymax = ci_high, shape = surprise_type),
+                  position = position_dodge(width = 0.5), size = 0.6) +
+  scale_color_manual(values = c("p < 0.05" = "#d62728", "p < 0.10" = "#ff7f0e", "n.s." = "grey60")) +
+  facet_wrap(~ var_type, scales = "free_y", ncol = 3) +
+  labs(x = "Tenor", y = "Coefficient estimate",
+       color = "Significance", shape = "Surprise type",
+       title = "Residual model")
+
+
+
 us_residuals_scatter_gg <- 
   ggplot(us_scatter_plot_data_tbl , aes(x = resid_ois, y = resid_spot)) +
   geom_point(alpha = 0.4, size = 1) +

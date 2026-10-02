@@ -18,7 +18,7 @@ eme_surprises_tbl <-
   summarise(
     median_estimate = median(median_estimate),
     actual = median(actual),
-    surprise = median_estimate - actual,
+    surprise = actual - median_estimate,
     .groups = "drop"
   ) |> 
   arrange(event, release_date) |> 
