@@ -28,10 +28,16 @@ us_mpc_surprises_models |>  print(n = 100)
 
 
 
-us_mpc_surprises_models  |> 
+us_mpc_surprises_gg <- 
+  us_mpc_surprises_models  |> 
   filter(term != "(Intercept)") |> 
   mutate(
     surprise_type = str_remove(surprise_type, "_models$"),
+    surprise_type = str_replace_all(surprise_type, 
+                                    c("target" = "Target",
+                                      "forward_guidance" = "Forward guidance",
+                                      "central_bank_information" = "Central bank information",
+                                      "lsap" = "Large-scale asset purchases")),
     model         = str_remove(model, "_models$"),
     var_type = case_when(
       str_detect(model, "ois")     ~ "Interest rate differential",
@@ -53,7 +59,7 @@ us_mpc_surprises_models  |>
       TRUE           ~ "n.s."
     ),
     sig_level = fct_relevel(sig_level, "p < 0.05", "p < 0.10", "n.s."),
-    var_type = fct_relevel(var_type, "Spot rate", "Forward rate", "Interest rate differential")
+    var_type = fct_relevel(var_type, "Spot rate", "Interest rate differential", "Forward rate")
   ) |> 
   ggplot(aes(x = tenor, y = estimate, color = sig_level, group = surprise_type)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
@@ -70,7 +76,8 @@ us_mpc_surprises_models  |>
 
 # Export ---------------------------------------------------------------
 artifacts_us_news_models <- list (
-  us_mpc_surprises_models = us_mpc_surprises_models
+  us_mpc_surprises_models = us_mpc_surprises_models,
+  us_mpc_surprises_gg = us_mpc_surprises_gg
 )
 
 write_rds(artifacts_us_news_models, file = here("Outputs", "artifacts_us_news_models.rds"))

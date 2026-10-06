@@ -53,7 +53,7 @@ knitr::opts_chunk$set(echo = FALSE,
                       fig.env= 'figure', 
                       tab.topcaption = TRUE,
                       ft.align = "left",
-                      ft.arraystretch = -1
+                      ft.arraystretch = 0
                       )
 library(tidyverse)
 library(readr)
@@ -97,14 +97,30 @@ source(here("Functions","borderlines.R" ))
 ```
 
 ```{r}
+
+sa_news_models <-  read_rds(here("Outputs", "artifacts_sa_news_models.rds"))
 sa_news_models_tbl <- 
-  read_rds(here("Outputs", "artifacts_sa_news_models.rds")) |> 
+  sa_news_models |> 
   pluck(1)
+
+sa_data_releases_tbl <- 
+  sa_news_models |> 
+  pluck("data_releases_models_tbl")
+
+sa_resids_models <- 
+  read_rds(here("Outputs", "artifacts_sa_residual_models.rds")) 
+
 sa_resids_models_tbl <- 
-  read_rds(here("Outputs", "artifacts_sa_residual_models.rds")) |> 
+  sa_resids_models |> 
   pluck(2)
+
 us_news_models <- 
   read_rds(here("Outputs", "artifacts_us_news_models.rds"))
+
+us_news_models_tbl <- 
+  us_news_models |> 
+  pluck(1)
+
 us_resids_models <- 
   read_rds(here("Outputs", "artifacts_us_residual_models.rds"))
 
@@ -200,12 +216,92 @@ combined_table <- function(surprise = "target_models") {
 
 \newpage
 
+
+
+```{r}
+#| label: fig-target
+#| fig-cap: "Response to Target"
+#| fig-width: 8
+#| fig-height: 3
+
+sa_news_models |> 
+   pluck(2)
+
+```
+
+
+
+```{r}
+#| label: fig-data_relases
+#| fig-cap: "Data release response"
+#| fig-width: 8
+#| fig-height: 3
+
+sa_news_models |> 
+  pluck(4)
+
+```
+
+
+
+
+
+
+
+```{r}
+#| label: fig-sa_residual
+#| fig-cap: "Spot residuals versus interest rate residual"
+#| fig-width: 8
+#| fig-height: 6
+
+sa_resids_models |> 
+  pluck(3)
+
+```
+
+
+
+```{r}
+#| label: fig-sa_residual_model
+#| fig-cap: "Spot residuals versus interest rate residuals model"
+#| fig-width: 8
+#| fig-height: 3
+
+sa_resids_models |> 
+  pluck(4) + 
+  labs(x = "Interest rate residual", y = "Spot residual", title = "Spot residuals versus interest rate residuals model") +
+  theme_linedraw()
+
+```
+
+
+
+
+
+
+```{r}
+#| label: fig-us_mps
+#| fig-cap: "US MPS response"
+#| fig-width: 8
+#| fig-height: 3
+
+us_news_models |> 
+  pluck(2)
+
+```
+
+
+
+
+\newpage
+
+
 ```{r}
 #| label: tbl-target
-#| fig.cap: "Response to Target"
-
-
-
+#| tbl-cap: "Response to Target"
+#| include: false
+#| eval: false
+#| 
 tables <- 
   c("target_models", "forward_guidance_models", "central_bank_information_models", "country_risk_models") |>
   set_names() |> 
@@ -218,9 +314,13 @@ tables[[1]] |>
 
 \newpage
 
+
+
 ```{r}
 #| label: tbl-forward
-#| fig.cap: "Response to forward"
+#| tbl-cap: "Response to FG"
+#| include: false
+#| eval: false
 
 tables[[2]] |> 
   autofit(add_w = 0.1)
@@ -230,7 +330,9 @@ tables[[2]] |>
 
 ```{r}
 #| label: tbl-information
-#| fig.cap: "Response to information"
+#| tbl-cap: "Response to CBI"
+#| include: false
+#| eval: false
 
 tables[[3]] |> 
   autofit(add_w = 0.1)
@@ -241,11 +343,18 @@ tables[[3]] |>
 
 ```{r}
 #| label: tbl-risk
-#| fig.cap: "Response to risk"
+#| tbl-cap: "Response to Country Risk"
+#| include: false
+#| eval: false
 
 tables[[4]] |> 
   autofit(add_w = 0.1)
 ```
+
+
+
+
+
 
 
 # Conclusion
@@ -271,7 +380,151 @@ tables[[4]] |>
 
 ## Data
 
+```{r}
+#| label: fig-sa_suprises
+#| fig-cap: "SA monetary policy surprises"
+#| fig-width: 8
+#| fig-height: 4
 
+read_rds(here("Outputs","artifacts_market_based_surprises.rds")) |> 
+  pluck(2)
+
+
+```
+
+```{r}
+#| label: fig-us_suprises
+#| fig-cap: "US monetary policy surprises"
+#| fig-width: 8
+#| fig-height: 7
+
+read_rds(here("Outputs","artifacts_us_surprises.rds")) |> 
+  pluck(2)
+
+
+```
+
+
+
+```{r}
+#| label: fig-joint_response
+#| fig-cap: "Key variables"
+#| fig-width: 8
+#| fig-height: 7
+
+
+read_rds(here("Outputs", "artifacts_joint_response_data.rds")) |> 
+  pluck(2)
+
+
+```
+
+\newpage
+
+```{r}
+#| label: tbl-descriptive_stats
+#| tbl-cap: "Descriptive statistics"
+#| ft.arraystretch: 0.5
+
+read_rds(here("Outputs", "artifacts_joint_response_data.rds")) |> 
+  pluck(3) |> 
+  flextable() |> 
+  colformat_double(digits = 4) |> 
+  autofit(add_w = .2)
+
+
+
+```
+
+\newpage
+# Detailed results
+
+```{r}
+#| label: tbl-sa_news_models
+#| tbl-cap: "SA monetary policy surprises models"
+#| ft.arraystretch: 0.5
+
+sa_news_models_tbl |> 
+  select(-term) |> 
+  mutate(model = str_replace_all(model, "_models", "")) |> 
+  mutate(surprise_type = str_replace_all(surprise_type, "_", " ")) |> 
+  rename("surprise type" = surprise_type) |>
+  rename("dependant variables" = model) |> 
+  group_by(`surprise type`) |> 
+  as_grouped_data("surprise type") |> 
+  flextable() |> 
+  colformat_double(digits = 3, j = 3:7) |> 
+  width(j = c(1, 2), width = 3.5, unit = "cm") |> 
+  width(j = -c(1, 2), width = 1.5, unit = "cm")
+
+
+```
+
+
+\newpage
+
+```{r}
+#| label: tbl-sa_resids_models
+#| tbl-cap: "SA residuals models"
+#| ft.arraystretch: .5
+
+sa_resids_models_tbl |> 
+  # select(-term) |> 
+  filter(!term == "(Intercept)") |> 
+  mutate(predictor_model = str_replace_all(predictor_model, "_models", "")) |> 
+  mutate(surprise_type = str_replace_all(surprise_type, "_", " ")) |> 
+  # rename("dependant variables" = model) |> 
+  rename("surprise type" = surprise_type) |>
+  group_by(`surprise type`) |> 
+  as_grouped_data("surprise type") |> 
+  flextable() |> 
+  colformat_double(digits = 3, j = 3:8) |> 
+  width(j = c(1), width = 3.5, unit = "cm") |> 
+  width(j = c(4:9), width = 1.5, unit = "cm")
+```
+
+
+\newpage
+
+```{r}
+#| label: tbl-sa_data_news_models
+#| tbl-cap: "SA data release surpises models"
+#| ft.arraystretch: 0.5
+
+sa_data_releases_tbl |> 
+  select(-term) |> 
+  mutate(model = str_replace_all(model, "_models", "")) |> 
+  mutate(surprise_type = str_replace_all(surprise_type, "_", " ")) |> 
+  rename("dependant variables" = model) |> 
+  rename("surprise type" = surprise_type) |>
+  group_by(`surprise type`) |> 
+  as_grouped_data("surprise type") |> 
+  flextable() |> 
+  colformat_double(digits = 3, j = 3:7) |> 
+  width(j = c(1, 2), width = 3.5, unit = "cm") |> 
+  width(j = -c(1, 2), width = 1.5, unit = "cm")
+```
+
+\newpage
+
+```{r}
+#| label: tbl-us_news_models
+#| tbl-cap: "US monetary policy surprises models"
+#| ft.arraystretch: .5
+
+us_news_models_tbl |> 
+  select(-term) |> 
+  mutate(model = str_replace_all(model, "_models", "")) |> 
+  mutate(surprise_type = str_replace_all(surprise_type, "_", " ")) |> 
+  rename("dependant variables" = model) |> 
+  rename("surprise type" = surprise_type) |>
+  group_by(`surprise type`) |> 
+  as_grouped_data("surprise type") |> 
+  flextable() |> 
+  colformat_double(digits = 3, j = 3:7) |> 
+  width(j = c(1, 2), width = 3.5, unit = "cm") |> 
+  width(j = -c(1, 2), width = 1.5, unit = "cm")
+```
 
 
 

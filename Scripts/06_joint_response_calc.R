@@ -46,9 +46,47 @@ joint_response_data_tbl <-
   drop_na()
 
 
+
+
+# descriptive table -------------------------------------------------------
+descriptive_statistics_tbl <- 
+  joint_response_data_tbl |> 
+  select(date, starts_with("change")) |> 
+  pivot_longer(-date, names_to = "series", values_to = "rate") |> 
+  group_by(series) |> 
+  summarise(
+    "Mean" = mean(rate, na.rm = TRUE),
+    "Median" = median(rate, na.rm = TRUE),
+    "SD" = sd(rate, na.rm = TRUE),
+    "Min" = min(rate, na.rm = TRUE),
+    "Max" = max(rate, na.rm = TRUE),
+    "Observations" = n()
+  ) 
+
+
+
+
+# graphing ----------------------------------------------------------------
+joint_response_gg <- 
+  joint_response_data_tbl |> 
+  select(date, starts_with("change")) |> 
+  pivot_longer(-date, names_to = "series", values_to = "rate") |> 
+  ggplot(aes(x = date, y = rate, color = series)) +
+  geom_line() +
+  facet_wrap(~series, scales = "free_y", ncol = 2) +
+  theme_linedraw() +
+  theme(legend.position = "none") +
+  scale_x_date(date_labels = "%Y", date_breaks = "4 years") +
+  scale_color_manual(values = pnw_palette("Bay",7), labels = scales::label_wrap(20))
+
+
+
+
 # Export ---------------------------------------------------------------
 artifacts_joint_response_data <- list (
-  joint_response_data_tbl = joint_response_data_tbl 
+  joint_response_data_tbl = joint_response_data_tbl,
+  joint_response_data_gg = joint_response_gg,
+  descriptive_statistics_tbl = descriptive_statistics_tbl
 )
 
 write_rds(artifacts_joint_response_data, file = here("Outputs", "artifacts_joint_response_data.rds"))

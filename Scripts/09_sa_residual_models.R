@@ -53,7 +53,8 @@ sa_scatter_plot_data_tbl <-
   )
 
 # Graphing ---------------------------------------------------------------
-sa_residual_models_tbl |> 
+sa_residual_models_gg <- 
+  sa_residual_models_tbl |> 
   rename("model" = predictor_model) |> 
   filter(term != "(Intercept)") |> 
   mutate(
@@ -88,7 +89,8 @@ sa_residual_models_tbl |>
   facet_wrap(~ var_type, scales = "free", ncol = 3) +
   labs(x = "Tenor", y = "Coefficient estimate",
        color = "Significance", shape = "Surprise type",
-       title = "Residual model")
+       title = "Residual model") +
+  theme_linedraw()
 
 
 sa_residual_scatter_gg <- 
@@ -98,15 +100,16 @@ sa_residual_scatter_gg <-
   facet_grid(surprise_type ~ ois_model, scales = "free_x",
              labeller = labeller(surprise_type = label_wrap_gen(15))) +
   labs(x = "OIS residual", y = "Spot residual",
-       title = "Residual-on-residual: spot vs OIS after partialling out surprise factor") +
+       title = "Residual-on-residual: spot vs OIS") +
   theme(strip.text.y = element_text(size = 7)) +
-  theme_minimal()
+  theme_linedraw()
 
 # Export ---------------------------------------------------------------
 artifacts_sa_residual_models <- list (
  sa_residuals_tbl = sa_residuals_tbl,
  sa_residual_models_tbl = sa_residual_models_tbl,
- sa_residual_scatter_gg = sa_residual_scatter_gg 
+ sa_residual_scatter_gg = sa_residual_scatter_gg,
+ sa_residual_models_gg = sa_residual_models_gg
 )
 
 write_rds(artifacts_sa_residual_models, file = here("Outputs", "artifacts_sa_residual_models.rds"))

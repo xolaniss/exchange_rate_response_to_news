@@ -53,9 +53,30 @@ us_surprises_tbl <-
   distinct(Date, .keep_all = TRUE)  # removed entries with multiple times. sample when from 297 to 291
 
 
+us_surprises_gg <- 
+  us_surprises_tbl |> 
+pivot_longer(-Date, names_to = "variable", values_to = "surprise") |>
+  ggplot(aes(x = Date, y = surprise, col = variable)) + # Change the variable names
+  geom_line() +
+  labs(
+    # title = "SA Market-Based MPS",
+    x = "",
+    y = "Surprise",
+    title = "US Market-Based MPS",
+    x = "Date",
+    y = " "
+  ) +
+  facet_wrap(~variable, scales = "free_y", ncol = 2) +
+  theme_linedraw() +
+  theme(legend.position = "none") +
+  scale_x_date(date_labels = "%Y", date_breaks = "4 years") +
+  scale_color_manual(values = pnw_palette("Bay",7), labels = scales::label_wrap(20))
+
+
 # Export -------------------------------------------------------------------
 artifacts_us_surprises <- list (
-  us_surprises_tbl = us_surprises_tbl
+  us_surprises_tbl = us_surprises_tbl,
+  us_surprises_gg = us_surprises_gg
 )
 
 write_rds(artifacts_us_surprises, file = here("Outputs", "artifacts_us_surprises.rds"))

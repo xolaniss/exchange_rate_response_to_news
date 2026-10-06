@@ -37,7 +37,7 @@ market_based_surprises_tbl <-
 # Graph -------------------------------------------------------------------
 market_based_surprises_gg <- 
   market_based_surprises_tbl |> 
-  pivot_longer(-Date, names_to = "variable", values_to = "surprise") |> 
+  pivot_longer(-Date, names_to = "variable", values_to = "surprise") |>
   ggplot(aes(x = Date, y = surprise, col = variable)) + # Change the variable names
   geom_line() +
   labs(
@@ -49,10 +49,11 @@ market_based_surprises_gg <-
     y = " "
   ) +
   facet_wrap(~variable, scales = "free_y", ncol = 2) +
-  theme_minimal(base_size = 8) +
+  theme_linedraw() +
   theme(legend.position = "none") +
   scale_x_date(date_labels = "%Y", date_breaks = "4 years") +
   scale_color_manual(values = pnw_palette("Bay",4), labels = scales::label_wrap(20))
+  
 
 
 # Export ---------------------------------------------------------------

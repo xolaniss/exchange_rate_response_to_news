@@ -63,10 +63,15 @@ spot_and_forward_tbl <-
 # Plots -------------------- 
 
 spot_and_forward_tbl |> # long term
-  select(date, spot, forward_1Y, forward_2Y, forward_3Y, forward_4Y, forward_5Y) |> 
+  select(date, spot, forward_2Y, forward_5Y) |> 
   pivot_longer(-date, names_to = "series", values_to = "rate") |> 
   ggplot(aes(x = date, y = rate, color = series)) +
-  geom_line()
+  geom_line() +
+  facet_wrap(~series, scales = "free_y", ncol = 2) +
+  theme_linedraw() +
+  theme(legend.position = "none") +
+  scale_x_date(date_labels = "%Y", date_breaks = "4 years") +
+  scale_color_manual(values = pnw_palette("Bay",4), labels = scales::label_wrap(20))
 
 
 spot_and_forward_tbl |> # recent curve
