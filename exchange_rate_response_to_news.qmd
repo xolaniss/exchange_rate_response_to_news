@@ -139,6 +139,20 @@ interest_rate_diff_models <-
 
 # Data and methodology
 
+## Data
+
+This study draws on four data sources: SA monetary policy surprises from @pirozhkova2024a, South African economic data releases from **add**, ZARONIA overnight index swaps (OIS) from the South African Reserve Bank (SARB), and US monetary policy surprises from @jarocinski2024a. The sample runs from April 2008 to November 2024, with the end date determined by the availability of ZARONIA OIS data. All SARB announcement days within this period are included, with limited exceptions where observations were dropped due to missing values or release dates that did not coincide with announcement days.
+
+The SA monetary policy surprises are summarised in @fig-sa_suprises. A vast literature exists on the high frequency identification of exogenous monetary policy shocks [see @kuttner2001b; @cook1989; @gurkaynak2005a; @swanson2021a;  @miranda-agrippino2021]. @pirozhkova2024a follow in this tradition isolating four surprises from high frequency South African financial market data. These are the traditional Target, Forward Guidance (FG) surprises, and the less traditional Central Bank Information (CBI), and Country Risk (CR) surprises. The target surprise account for the immediate response by investors to a policy announcement, whilst forward guidance incorporates responses to the communicated longer term path of policy. The CBI can be viewed as a subset of the FG, which specifically focuses on the economy [@jarocinski2024a]. The CR surprise is a novel addition by @pirozhkova2024a, which details the role of the central bank in responding to external shocks in a small open economy, such as South Africa. For our purposes, these surprises provide the best available estimates of monetary policy surprises in South Africa for analysing the exchange rate and interest rate response to monetary policy surprises. As a supplement our analysis of the response to South African news, by using data on economic release - cpi, gdp, and unemployment. The surprise to these news is defined as the difference between the actual release and the forecasts from prominent analysts. To understand the equivalent response to US surprises, we made use of the @jarocinski2024a surprises (see @fig-us_suprises). These are defined exactly as the @pirozhkova2024a, with the exclusion of the CR surprise, and the inclusion of the Large-scale Asset Purchases (LSAP) surprise. Lastly, the SARB recently undertook a reform of its benchmark rate the JIBAR. The result of that process is the ZARONIA OIS data, which is used to measure overnight interest rates in South Africa (see @fig-zaronia). The 2, 5, and 10 year tenors are of interest to us. These give a detailed picture of the term structure of interest rates and their response to monetary policy shocks. The key variables for the analysis are shown in @fig-joint_response
+
+
+## Methodology
+
+
+
+
+
+
 # Results
 
 
@@ -220,9 +234,9 @@ combined_table <- function(surprise = "target_models") {
 
 ```{r}
 #| label: fig-target
-#| fig-cap: "Response to Target"
+#| fig-cap: "Response to  Monetary Policy Surprises"
 #| fig-width: 8
-#| fig-height: 3
+#| fig-height: 4
 
 sa_news_models |> 
    pluck(2)
@@ -235,7 +249,7 @@ sa_news_models |>
 #| label: fig-data_relases
 #| fig-cap: "Data release response"
 #| fig-width: 8
-#| fig-height: 3
+#| fig-height: 4
 
 sa_news_models |> 
   pluck(4)
@@ -283,7 +297,7 @@ sa_resids_models |>
 #| label: fig-us_mps
 #| fig-cap: "US MPS response"
 #| fig-width: 8
-#| fig-height: 3
+#| fig-height: 4
 
 us_news_models |> 
   pluck(2)
@@ -352,11 +366,6 @@ tables[[4]] |>
 ```
 
 
-
-
-
-
-
 # Conclusion
 
 \newpage 
@@ -405,6 +414,20 @@ read_rds(here("Outputs","artifacts_us_surprises.rds")) |>
 ```
 
 
+```{r}
+#| label: fig-zaronia
+#| fig-cap: "SA ZARONIA Overnight Index Rates"
+#| fig-width: 8
+#| fig-height: 4
+
+read_rds(here("Outputs", "artifacts_interest_rate.rds")) |> 
+  pluck(2)
+
+
+```
+
+
+
 
 ```{r}
 #| label: fig-joint_response
@@ -436,8 +459,11 @@ read_rds(here("Outputs", "artifacts_joint_response_data.rds")) |>
 
 ```
 
+
+
+
 \newpage
-# Detailed results
+## Detailed results
 
 ```{r}
 #| label: tbl-sa_news_models

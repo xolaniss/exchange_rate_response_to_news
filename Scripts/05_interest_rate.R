@@ -54,6 +54,22 @@ sa_ois_tbl <-
   ) |> 
   pivot_wider(names_from = names, values_from = value)
 
+
+
+# Graphing ----------------------------------------------------------------
+sa_ois_gg <- 
+  sa_ois_tbl |> 
+  select(-ends_with("1y"), -ends_with("15y")) |> 
+  rename("SA OIS 2y" = sa_ois_2y, "SA OIS 5y" = sa_ois_5y, "SA OIS 10y" = sa_ois_10y) |> 
+  pivot_longer(-date, names_to = "tenor", values_to = "value") |> 
+  mutate(tenor = fct_relevel(tenor, "SA OIS 2y", "SA OIS 5y", "SA OIS 10y")) |> 
+  ggplot(aes(x = date, y = value, color = tenor)) + 
+  geom_line() + 
+  labs(x = "", y = "Rate") +
+  facet_free(~tenor) +
+  theme_linedraw() +
+  theme(legend.position = "none")
+  
   
 # Combine -----------------------------------------------
 combined_interest_tbl <- 
@@ -62,7 +78,8 @@ combined_interest_tbl <-
 
 # Export ---------------------------------------------------------------
 artifacts_interest_rate <- list (
-  combined_interest_tbl = combined_interest_tbl
+  combined_interest_tbl = combined_interest_tbl,
+  sa_ois_gg = sa_ois_gg
 )
 
 write_rds(artifacts_interest_rate, file = here("Outputs", "artifacts_interest_rate.rds"))

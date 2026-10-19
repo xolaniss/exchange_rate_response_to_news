@@ -62,7 +62,6 @@ pivot_longer(-Date, names_to = "variable", values_to = "surprise") |>
     # title = "SA Market-Based MPS",
     x = "",
     y = "Surprise",
-    title = "US Market-Based MPS",
     x = "Date",
     y = " "
   ) +

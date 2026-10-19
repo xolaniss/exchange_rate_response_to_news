@@ -44,7 +44,6 @@ market_based_surprises_gg <-
     # title = "SA Market-Based MPS",
     x = "",
     y = "Surprise",
-    title = "SA Market-Based MPS",
     x = "Date",
     y = " "
   ) +
