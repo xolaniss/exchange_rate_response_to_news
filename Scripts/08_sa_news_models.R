@@ -36,12 +36,15 @@ mpc_surprises_models_gg <-
       TRUE                          ~ "Spot rate"
     ),
     tenor = case_when(
+      str_detect(model, "1y")  ~ "1Y",
       str_detect(model, "2y")  ~ "2Y",
+      str_detect(model, "3y")  ~ "3Y",
+      str_detect(model, "4y")  ~ "4Y",
       str_detect(model, "5y")  ~ "5Y",
       str_detect(model, "10y") ~ "10Y",
       TRUE                      ~ "Spot"
     ),
-    tenor     = fct_relevel(tenor, "Spot", "2Y", "5Y", "10Y"),
+    tenor     = fct_relevel(tenor, "Spot", "1Y",  "2Y", "3Y", "4Y",  "5Y", "10Y"),
     ci_low    = estimate - 1.96 * std.error,
     ci_high   = estimate + 1.96 * std.error,
     sig_level = case_when(
@@ -78,10 +81,16 @@ data_releases_models_tbl <-
   ),
   predictors = c(
     "change_ln_spot_models" = "change_ln_spot",
+    "change_ois_1y_models" = "change_ois_1y",
     "change_ois_2y_models" = "change_ois_2y",
+    "change_ois_3y_models" = "change_ois_3y",
+    "change_ois_4y_models" = "change_ois_4y",
     "change_ois_5y_models" = "change_ois_5y",
     "change_ois_10y_models" = "change_ois_10y",
+    "change_forward_1y_models" = "change_forward_1y",
     "change_forward_2y_models" = "change_forward_2y",
+    "change_forward_3y_models" = "change_forward_3y",
+    "change_forward_4y_models" = "change_forward_4y",
     "change_forward_5y_models" = "change_forward_5y",
     "change_forward_10y_models" = "change_forward_10y"
   )
@@ -107,12 +116,15 @@ data_releases_models_gg <-
     ),
     surprise_type = str_replace_all(surprise_type, c("Cpi" = "CPI", "Gdp" = "GDP", "South Africa Unemployment" = "Unemployment")),
     tenor = case_when(
+      str_detect(model, "1y")  ~ "1Y",
       str_detect(model, "2y")  ~ "2Y",
+      str_detect(model, "3y")  ~ "3Y",
+      str_detect(model, "4y")  ~ "4Y",
       str_detect(model, "5y")  ~ "5Y",
       str_detect(model, "10y") ~ "10Y",
       TRUE                      ~ "Spot"
     ),
-    tenor     = fct_relevel(tenor, "Spot", "2Y", "5Y", "10Y"),
+    tenor     = fct_relevel(tenor, "Spot", "1Y",  "2Y", "3Y", "4Y",  "5Y", "10Y"),
     ci_low    = estimate - 1.96 * std.error,
     ci_high   = estimate + 1.96 * std.error,
     sig_level = case_when(

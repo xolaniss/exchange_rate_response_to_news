@@ -24,12 +24,18 @@ news_models <- function(data,
                         ),
                         predictors = c(
                           "change_ln_spot_models"    = "change_ln_spot",
-                          "change_ois_2y_models"     = "change_ois_2y",
-                          "change_ois_5y_models"     = "change_ois_5y", 
-                          "change_ois_10y_models"    = "change_ois_10y",
-                          "change_forward_2y_models" = "change_forward_2y",
-                          "change_forward_5y_models" = "change_forward_5y",
-                          "change_forward_10y_models"= "change_forward_10y"
+                          "change_ois_1y_models"      = "change_ois_1y",
+                          "change_ois_2y_models"      = "change_ois_2y",
+                          "change_ois_3y_models"      = "change_ois_3y",
+                          "change_ois_4y_models"      = "change_ois_4y",
+                          "change_ois_5y_models"      = "change_ois_5y",
+                          "change_ois_10y_models"     = "change_ois_10y",
+                          "change_forward_1y_models"  = "change_forward_1y",
+                          "change_forward_2y_models"  = "change_forward_2y",
+                          "change_forward_3y_models"  = "change_forward_3y",
+                          "change_forward_4y_models"  = "change_forward_4y",
+                          "change_forward_5y_models"  = "change_forward_5y",
+                          "change_forward_10y_models" = "change_forward_10y"
                         )) {
   
   surprises |> 
@@ -55,10 +61,16 @@ news_model_residuals <-
            ),
            predictors = c(
              "change_ln_spot_models"     = "change_ln_spot",
+             "change_ois_1y_models"      = "change_ois_1y",
              "change_ois_2y_models"      = "change_ois_2y",
+             "change_ois_3y_models"      = "change_ois_3y",
+             "change_ois_4y_models"      = "change_ois_4y",
              "change_ois_5y_models"      = "change_ois_5y",
              "change_ois_10y_models"     = "change_ois_10y",
+             "change_forward_1y_models"  = "change_forward_1y",
              "change_forward_2y_models"  = "change_forward_2y",
+             "change_forward_3y_models"  = "change_forward_3y",
+             "change_forward_4y_models"  = "change_forward_4y",
              "change_forward_5y_models"  = "change_forward_5y",
              "change_forward_10y_models" = "change_forward_10y"
            )) {
@@ -167,9 +179,12 @@ decompose_ois <-
            ),
            # Default to OIS tenors only — the series being decomposed
            predictors = c(
-             "change_ois_2y_models"  = "change_ois_2y",
-             "change_ois_5y_models"  = "change_ois_5y",
-             "change_ois_10y_models" = "change_ois_10y"
+             "change_ois_1y_models"      = "change_ois_1y",
+             "change_ois_2y_models"      = "change_ois_2y",
+             "change_ois_3y_models"      = "change_ois_3y",
+             "change_ois_4y_models"      = "change_ois_4y",
+             "change_ois_5y_models"      = "change_ois_5y",
+             "change_ois_10y_models"     = "change_ois_10y"
            )) {
     surprises |> 
       purrr::map(function(surprise) {

@@ -5,6 +5,7 @@
 PACKAGES      = packages.R
 FX_PLOT       = Functions/fx_plot.R
 MODEL_FNS     = Functions/model_functions.R
+LP_FNS        = Functions/lproj.R Functions/run_slp.R
 SHARED        = $(PACKAGES) $(FX_PLOT)
 
 # ── Output paths ──────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ all: \
 	$(OUT)/artifacts_sa_residual_models.rds \
 	$(OUT)/artifacts_us_news_models.rds \
 	$(OUT)/artifacts_us_residual_models.rds \
+	$(OUT)/artifacts_lp.rds \
 	$(OUT)/artifacts_differntial_models.rds
 
 paper: all
@@ -89,6 +91,13 @@ $(OUT)/artifacts_differntial_models.rds: \
 	Scripts/12_interest_rate_models.R \
 	$(OUT)/artifacts_model_data.rds \
 	$(MODEL_FNS) $(SHARED)
+	Rscript $<
+
+# ── Stage 5: Local projections ────────────────────────────────────────────────
+$(OUT)/artifacts_lp.rds: \
+	Scripts/13_LP.R \
+	$(OUT)/artifacts_model_data.rds \
+	$(LP_FNS) $(SHARED)
 	Rscript $<
 
 # ── Housekeeping ──────────────────────────────────────────────────────────────

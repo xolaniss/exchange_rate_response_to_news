@@ -45,12 +45,15 @@ us_mpc_surprises_gg <-
       TRUE                          ~ "Spot rate"
     ),
     tenor = case_when(
+      str_detect(model, "1y")  ~ "1Y",
       str_detect(model, "2y")  ~ "2Y",
+      str_detect(model, "3y")  ~ "3Y",
+      str_detect(model, "4y")  ~ "4Y",
       str_detect(model, "5y")  ~ "5Y",
       str_detect(model, "10y") ~ "10Y",
       TRUE                      ~ "Spot"
     ),
-    tenor     = fct_relevel(tenor, "Spot", "2Y", "5Y", "10Y"),
+    tenor     = fct_relevel(tenor, "Spot", "1Y",  "2Y", "3Y", "4Y",  "5Y", "10Y"),
     ci_low    = estimate - 1.96 * std.error,
     ci_high   = estimate + 1.96 * std.error,
     sig_level = case_when(

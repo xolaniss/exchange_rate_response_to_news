@@ -48,7 +48,7 @@ sa_scatter_plot_data_tbl <-
   ) |> 
   dplyr::mutate(
     ois_model     = str_remove(ois_model, "_MODELS") |> str_replace("OIS ", "OIS ") |> 
-      factor(levels = c("OIS 2Y", "OIS 5Y", "OIS 10Y")),
+      factor(levels = c('OIS 1Y', "OIS 2Y", "OIS 3Y", "OIS 4Y", "OIS 5Y", "OIS 10Y")),
     surprise_type = str_replace_all(surprise_type, "_", " ") |> str_to_title()
   )
 
@@ -66,12 +66,15 @@ sa_residual_models_gg <-
       TRUE                          ~ "Spot rate"
     ),
     tenor = case_when(
+      str_detect(model, "1y")  ~ "1Y",
       str_detect(model, "2y")  ~ "2Y",
+      str_detect(model, "3y")  ~ "3Y",
+      str_detect(model, "4y")  ~ "4Y",
       str_detect(model, "5y")  ~ "5Y",
       str_detect(model, "10y") ~ "10Y",
       TRUE                      ~ "Spot"
     ),
-    tenor     = fct_relevel(tenor, "Spot", "2Y", "5Y", "10Y"),
+    tenor     = fct_relevel(tenor, "Spot", "1Y",  "2Y", "3Y", "4Y",  "5Y", "10Y"),
     ci_low    = estimate - 1.96 * std.error,
     ci_high   = estimate + 1.96 * std.error,
     sig_level = case_when(

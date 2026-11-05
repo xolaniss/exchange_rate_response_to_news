@@ -27,28 +27,38 @@ joint_response_data_tbl <-
   combined_tbl |> 
   mutate(
     ln_spot        = log(spot),
-    # Daily log return of spot
-    change_ln_spot = (ln_spot - lag(ln_spot)),
+    # Daily log return of spot (%)
+    change_ln_spot = (ln_spot - lag(ln_spot)) * 100,
     
     # Daily change in SA-US OIS interest rate differential (pp)
+    change_ois_1y = (sa_ois_1y - us_ois_1y) - lag(sa_ois_1y - us_ois_1y),
     change_ois_2y  = (sa_ois_2y  - us_ois_2y)  - lag(sa_ois_2y  - us_ois_2y) ,
+    change_ois_3y = (sa_ois_3y - us_ois_3y) - lag(sa_ois_3y - us_ois_3y),
+    change_ois_4y = (sa_ois_4y - us_ois_4y) - lag(sa_ois_4y - us_ois_4y),
     change_ois_5y  = (sa_ois_5y  - us_ois_5y)  - lag(sa_ois_5y  - us_ois_5y) ,
     change_ois_10y =  (sa_ois_10y - us_ois_10y) - lag(sa_ois_10y - us_ois_10y) ,
     
-    # Daily log return of observed outright forward exchange rates
+    # # Daily log return of observed outright forward exchange rates (multiply by 100 if re-enabled, to match spot in %)
+    # change_forward_1y = (log(forward_1Y) - lag(log(forward_1Y))),
     # change_forward_2y = (log(forward_2Y) - lag(log(forward_2Y))),
+    # change_forward_3y = (log(forward_3Y) - lag(log(forward_3Y))),
+    # change_forward_4y = (log(forward_4Y) - lag(log(forward_4Y))),
     # change_forward_5y = (log(forward_5Y) - lag(log(forward_5Y))) ,
-    # 
-    # 10Y outright forward not available; CIP approximation:
+
+    #  CIP approximation:
+    # 10Y outright forward not available;
     # Δlog(F^10Y) ≈ Δlog(S) + 10 × Δ(r_SA - r_US)
-    change_forward_2y = change_ln_spot + change_ois_2y,
-    change_forward_5y = change_ln_spot +  change_ois_5y,
-    change_forward_10y = change_ln_spot +  change_ois_10y
+    # Spot is in % (log x 100) and OIS in pp, so 100 * ln(F/S) = n * (r_SA - r_US)
+    # needs no further rescaling; forwards are therefore in %
+    change_forward_1y = change_ln_spot + change_ois_1y,
+    change_forward_2y = change_ln_spot + 2*change_ois_2y,
+    change_forward_3y = change_ln_spot + 3*change_ois_3y,
+    change_forward_4y = change_ln_spot + 4*change_ois_4y,
+    change_forward_5y = change_ln_spot + 5*change_ois_5y,
+    change_forward_10y = change_ln_spot + 10*change_ois_10y
   ) |> 
   drop_na()
-
-
-
+    
 
 # descriptive table -------------------------------------------------------
 descriptive_statistics_tbl <- 
@@ -66,8 +76,6 @@ descriptive_statistics_tbl <-
   ) 
 
 
-
-
 # graphing ----------------------------------------------------------------
 joint_response_gg <- 
   joint_response_data_tbl |> 
@@ -79,10 +87,7 @@ joint_response_gg <-
   theme_linedraw() +
   theme(legend.position = "none") +
   scale_x_date(date_labels = "%Y", date_breaks = "4 years") +
-  scale_color_manual(values = pnw_palette("Bay",7), labels = scales::label_wrap(20))
-
-
-
+  scale_color_manual(values = pnw_palette("Bay",13), labels = scales::label_wrap(20))
 
 # Export ---------------------------------------------------------------
 artifacts_joint_response_data <- list (

@@ -28,10 +28,12 @@ series_list <- imap(tenor_pairs, function(date_col, tenor) {
 us_ois_tbl <- reduce(series_list, inner_join, by = "date") |> 
   arrange(date) |> 
   mutate(date = as.Date(date)) |> 
-  select(date, "1Y", "2Y", "5Y", "10Y") |> 
+  select(date, "1Y", "2Y","3Y", "4Y", "5Y", "10Y") |> 
   rename(
     us_ois_1y = "1Y",
     us_ois_2y = "2Y",
+    us_ois_3y = "3Y",
+    us_ois_4y = "4Y",
     us_ois_5y = "5Y",
     us_ois_10y = "10Y"
   )
@@ -44,8 +46,8 @@ sa_ois_tbl <-
     Dates = as.Date(Dates)) |> 
   janitor::clean_names() |> 
   rename(date = dates) |> 
-  select(date, ends_with(c("12m", "2y", "5y", "10y"))) |> 
-  select(-ends_with(c("12y", "22y", "15", "25y"))) |> 
+  select(date, ends_with(c("12m", "2y", "3y", "4y", "5y", "10y"))) |> 
+  select(-ends_with(c("12y","13y", "22y", "15y", "14y", "25y", "24y", "23y"))) |> 
   pivot_longer(-date, names_to = "names", values_to = "value") |> 
   mutate(
     names = str_replace_all(names, "sssp_ois_12m", "sa_ois_1y"),
@@ -59,14 +61,19 @@ sa_ois_tbl <-
 # Graphing ----------------------------------------------------------------
 sa_ois_gg <- 
   sa_ois_tbl |> 
-  select(-ends_with("1y"), -ends_with("15y")) |> 
-  rename("SA OIS 2y" = sa_ois_2y, "SA OIS 5y" = sa_ois_5y, "SA OIS 10y" = sa_ois_10y) |> 
+  rename(
+        "SA OIS 1y" = sa_ois_1y,
+        "SA OIS 2y" = sa_ois_2y,
+        "SA OIS 3y" = sa_ois_3y,
+        "SA OIS 4y" = sa_ois_4y,
+         "SA OIS 5y" = sa_ois_5y,
+         "SA OIS 10y" = sa_ois_10y) |>  
   pivot_longer(-date, names_to = "tenor", values_to = "value") |> 
-  mutate(tenor = fct_relevel(tenor, "SA OIS 2y", "SA OIS 5y", "SA OIS 10y")) |> 
+  mutate(tenor = fct_relevel(tenor, "SA OIS 1y", "SA OIS 2y", "SA OIS 3y", "SA OIS 4y", "SA OIS 5y", "SA OIS 10y")) |>
   ggplot(aes(x = date, y = value, color = tenor)) + 
   geom_line() + 
   labs(x = "", y = "Rate") +
-  facet_free(~tenor) +
+  facet_wrap(~tenor, nrow = 4 ) +
   theme_linedraw() +
   theme(legend.position = "none")
   

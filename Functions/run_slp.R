@@ -1,6 +1,9 @@
 run_slp <-
+  # per_unit = TRUE rescales IRFs to a 1-unit (here 1 pp) shock; lproj() returns
+  # responses to a 1 SD shock, so we divide by delta (the shock's residual SD).
   function(data, response_cols, shock_col, P = 20, h1 = 0, H = 20,
-           lambda = c(0.0001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 9, 10) / 1000) {
+           lambda = c(0.0001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 9, 10) / 1000,
+           per_unit = TRUE) {
 
     # Helper: prepare estimation data for one response column
     prepare_data <- function(r_col) {
@@ -31,7 +34,14 @@ run_slp <-
         const = TRUE, type = "smooth", H = H, h1 = h1, r = 2, lambda = lambda
       )
       fit_cv <- lproj.cv(fit_init, 10)
-      lproj.conf(fit_cv, fit_cv$idx.opt)
+      fit    <- lproj.conf(fit_cv, fit_cv$idx.opt)
+
+      if (per_unit) {
+        fit$ir.opt <- fit$ir.opt / fit$delta
+        fit$irc    <- fit$irc / fit$delta
+      }
+      fit$per_unit <- per_unit
+      fit
     }
 
     horizons <- seq(h1, H)
@@ -69,7 +79,9 @@ run_slp <-
       scale_color_manual(values = colors) +
       scale_fill_manual(values = colors) +
       facet_wrap(~ Type, scales = "free_y", ncol = length(response_cols)) +
-      labs(x = "Horizon", y = "Response", title = "", color = "") +
+      labs(x = "Horizon",
+           y = if (per_unit) "Response per 1 pp shock" else "Response per 1 SD shock",
+           title = "", color = "") +
       theme_minimal() +
       theme(legend.position = "none") +
       scale_x_continuous(breaks = c(0, 6, 12)) +

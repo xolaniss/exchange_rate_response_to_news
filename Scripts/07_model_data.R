@@ -14,10 +14,16 @@ joint_response_data_tbl <-
   select(
     date,
     change_ln_spot,
+    change_ois_1y,
     change_ois_2y,
+    change_ois_3y,
+    change_ois_4y,
     change_ois_5y,
     change_ois_10y,
+    change_forward_1y,
     change_forward_2y,
+    change_forward_3y,
+    change_forward_4y,
     change_forward_5y,
     change_forward_10y
   )
