@@ -91,11 +91,18 @@ compare_slp <- function(all_slp,
                         tenors        = c("1y", "2y", "3y", "4y","5y","10y"),
                         response_cols = c(
                           "change_ln_spot",
+                          "change_ois_1y",
+                          "change_ois_2y",
+                          "change_ois_3y",
+                          "change_ois_4y",
+                          "change_ois_5y",
+                          "change_ois_10y",
+                          "change_forward_10y",
                           "change_forward_1y",
                           "change_forward_2y",
                           "change_forward_3y",
                           "change_forward_4y",
-                          "change_forward_5y",
+                          "change_forwards_5y",
                           "change_forward_10y"
                         ),
                         H = 12) {
@@ -158,6 +165,12 @@ comparison_plots <- compare_slp(mps_all_slp)
 
 # Access by response variable:
 comparison_plots$change_ln_spot
+comparison_plots$change_ois_1y
+comparison_plots$change_ois_2y
+comparison_plots$change_ois_3y
+comparison_plots$change_ois_4y
+comparison_plots$change_ois_5y
+comparison_plots$change_ois_10y
 comparison_plots$change_forward_1y
 comparison_plots$change_forward_2y
 comparison_plots$change_forward_3y

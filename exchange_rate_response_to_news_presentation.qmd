@@ -1,0 +1,686 @@
+---
+title: "Decomposing Exchange Rate Responses to News: Evidence from South Africa"
+format:
+  beamer:
+    aspectratio: 141
+    slide-level: 2
+    suppress-bibliography: false
+    section-titles: false
+    number-sections: false
+    theme: "CambridgeUS"
+    fonttheme: "structurebold"
+    colortheme: "dolphin"
+    header-includes:
+      - \setbeamertemplate{items}[circle]
+      # - \setbeamertemplate{footline}[frame number]
+      - \usepackage{setspace}
+      - \usepackage{booktabs}
+      - \usepackage{amsmath}
+      - \setbeamerfont{title}{size=\Large}
+      - \setbeamerfont{author}{size=\large}
+      - \setbeamerfont{subtitle}{size=\large}
+      - \setbeamerfont{institute}{size=\small}
+      - \setbeamerfont{date}{size=\small}
+      - \useoutertheme[footline=authorinstitute,subsection=false]{miniframes}
+      - \setbeamerfont{section in head/foot}{size=\tiny}
+      - \setbeamersize{mini frame size=.08cm, mini frame offset=.02cm}
+      - \setbeamersize{text margin left=0.6cm, text margin right=0.6cm}
+      - \definecolor{UBCblue}{rgb}{0.04706, 0.13725, 0.26667}
+      - \usecolortheme[named=UBCblue]{structure}
+      - \setbeamertemplate{frametitle}[default][center]
+      - \setbeamerfont{frametitle}{size=\large}
+      - \setbeamertemplate{frame numbering}{}
+      - \usepackage{appendixnumberbeamer}
+      - \let\oldsection\section
+      - \renewcommand{\section}{\ifnum\value{section}=5 \appendix\fi\oldsection}
+    institute: "South Africa Reserve Bank"
+authors:
+  - name: Xolani Sibande
+    affiliation:
+    - name: South Africa Reserve Bank
+      department: Economic Research Department
+      country: South Africa
+    roles: writing
+    corresponding: true
+    email: xolani.sibande@resbank.co.za
+  - name: Ozer Karagedikli
+    affiliation:
+    - name: Asia Business School
+      country: Malaysia
+    roles: writing
+    email: ozer.karagedikli@asb.edu.my
+bibliography: references.bib
+link-citations: false
+---
+
+```{r setup}
+#| include: false
+options(scipen = 999)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  dpi = 300,
+  fig.width = 11,
+  fig.height = 6.2,
+  # Both dimensions are passed to pandoc, whose Beamer template applies
+  # keepaspectratio, so every figure is scaled to fit the frame without
+  # being cut off at the bottom.
+  out.width = "100%",
+  out.height = "78%",
+  fig.align = "center"
+)
+
+library(tidyverse)
+library(patchwork)
+library(here)
+library(kableExtra)
+
+```
+
+
+```{r load}
+#| include: false
+
+# Saved results -----------------------------------------------------------
+sa_news    <- read_rds(here("Outputs", "artifacts_sa_news_models.rds"))
+sa_resid   <- read_rds(here("Outputs", "artifacts_sa_residual_models.rds"))
+us_news    <- read_rds(here("Outputs", "artifacts_us_news_models.rds"))
+diff_mod   <- read_rds(here("Outputs", "artifacts_differntial_models.rds"))
+lp         <- read_rds(here("Outputs", "artifacts_lp.rds"))
+model_data <- read_rds(here("Outputs", "artifacts_model_data.rds"))
+joint      <- read_rds(here("Outputs", "artifacts_joint_response_data.rds"))
+
+mps  <- sa_news$mpc_surprises_models
+rel  <- sa_news$data_releases_models_tbl
+us_m <- us_news$us_mpc_surprises_models
+
+# Helpers -----------------------------------------------------------------
+stars <- function(p) {
+  case_when(p < 0.01 ~ "***", p < 0.05 ~ "**", p < 0.10 ~ "*", TRUE ~ "")
+}
+
+label_response <- function(x) {
+  x |>
+    str_remove("_models$") |>
+    str_remove("^change_") |>
+    str_replace("^ln_spot$", "Spot") |>
+    str_replace("^ois_(.*)$", "OIS gap \\1") |>
+    str_replace("^forward_(.*)$", "Forward \\1")
+}
+
+label_surprise <- function(x) {
+  x <- str_remove(x, "_models$")
+  case_when(
+    x == "cpi"                       ~ "CPI",
+    x == "gdp"                       ~ "GDP",
+    x == "south_africa_unemployment" ~ "Unemployment",
+    x == "lsap"                      ~ "LSAP",
+    TRUE                             ~ str_to_title(str_replace_all(x, "_", " "))
+  )
+}
+
+latex_table <- function(df, size = 8, align = NULL) {
+  df |>
+    kbl(format = "latex", booktabs = TRUE, linesep = "", align = align) |>
+    kable_styling(font_size = size, latex_options = c("hold_position", "scale_down"))
+}
+
+# One coefficient from a results table, for quoting in the text
+pick_row <- function(tbl, surprise, model) {
+  r <- tbl |> filter(surprise_type == surprise, model == !!model, term != "(Intercept)")
+  stopifnot(nrow(r) == 1)
+  r
+}
+ci <- function(r) {
+  p <- if (r$p.value < 0.001) "p < 0.001" else sprintf("p = %.3f", r$p.value)
+  sprintf("%.2f (%s)", r$estimate, p)
+}
+
+t_spot     <- pick_row(mps, "target_models",                   "change_ln_spot_models")
+fg_spot    <- pick_row(mps, "forward_guidance_models",         "change_ln_spot_models")
+cbi_10y    <- pick_row(mps, "central_bank_information_models", "change_ois_10y_models")
+cr_2y      <- pick_row(mps, "country_risk_models",             "change_ois_2y_models")
+cpi_2y     <- pick_row(rel, "cpi_models",                      "change_ois_2y_models")
+gdp_spot   <- pick_row(rel, "gdp_models",                      "change_ln_spot_models")
+us_fg_spot <- pick_row(us_m, "forward_guidance_models",        "change_ln_spot_models")
+us_fg_2y   <- pick_row(us_m, "forward_guidance_models",        "change_ois_2y_models")
+us_ffr_1y  <- pick_row(us_m, "target_models",                  "change_ois_1y_models")
+
+undecomposed <- diff_mod$sa_spot_undecomposed_models_tbl |> filter(term != "(Intercept)")
+resid_models <- sa_resid$sa_residual_models_tbl |> filter(term != "(Intercept)")
+
+big <- theme(text = element_text(size = 14))
+```
+
+# Introduction
+
+## Motivation
+
+- Monetary policy news moves exchange rates, but **how** is less clear for small open economies
+- Textbook channel: a tightening raises the domestic interest rate gap, and the currency appreciates
+- In practice, the link is weak and unstable: currencies also respond to risk premia and global conditions
+- South Africa is a useful case: an open, inflation-targeting economy with a liquid, freely floating currency
+- High-frequency identification of policy surprises lets us isolate the news component [@kuttner2001b; @cook1989; @gurkaynak2005a; @swanson2021a; @miranda-agrippino2021]
+
+## Typical moves on announcement days
+
+```{r typical-moves}
+#| results: asis
+
+all_days       <- joint$joint_response_data_tbl
+announce_dates <- unique(c(model_data[[1]]$date, model_data[[2]]$date, model_data[[3]]$date))
+
+move_stats <- function(d) {
+  tibble(
+    days     = nrow(d),
+    spot_abs = mean(abs(d$change_ln_spot)),
+    spot_gt1 = mean(abs(d$change_ln_spot) > 1),
+    gap2y_bp = 100 * mean(abs(d$change_ois_2y))
+  )
+}
+
+moves <- bind_rows(
+  "Other days"         = move_stats(filter(all_days, !date %in% announce_dates)),
+  "SA monetary policy" = move_stats(model_data[[1]]),
+  "SA data releases"   = move_stats(model_data[[2]]),
+  "US monetary policy" = move_stats(model_data[[3]]),
+  .id = "sample"
+)
+
+moves |>
+  transmute(
+    Sample                          = sample,
+    Days                            = format(days, big.mark = ","),
+    `Spot: mean move (%)`           = sprintf("%.2f", spot_abs),
+    `Spot: days over 1%`            = sprintf("%.0f%%", 100 * spot_gt1),
+    `2y gap: mean move (bp)`        = sprintf("%.1f", gap2y_bp)
+  ) |>
+  latex_table(size = 9, align = "lrrrr")
+```
+
+\vspace{0.2cm}
+
+- On an ordinary day the rand moves about `r sprintf("%.1f", moves$spot_abs[1])`%, and on SA monetary policy and data release days it moves about the same (`r sprintf("%.2f", moves$spot_abs[2])`% and `r sprintf("%.2f", moves$spot_abs[3])`%)
+- US monetary policy days stand out: `r sprintf("%.2f", moves$spot_abs[4])`% on average, with `r sprintf("%.0f", 100 * moves$spot_gt1[4])`% of days moving more than 1%
+- The rate gap reacts more clearly on SA monetary policy days: about `r sprintf("%.0f", moves$gap2y_bp[2])` bp at the 2y, against `r sprintf("%.0f", moves$gap2y_bp[1])` bp on other days
+- The news is a small signal against the rand's everyday volatility, so we need to isolate the surprise
+
+\footnotesize Mean move is the mean absolute daily change. Other days have no announcement.
+
+## Related literature: exchange rate responses to news
+
+- Macro announcement surprises cause jumps in exchange rates in high-frequency data [@andersen2003]
+- The joint response of exchange rates and term structures is read through uncovered interest parity and risk premia: a stronger-than-expected release can appreciate the dollar while implying overshooting [@faust2003]
+- Small open economies: an unanticipated 25 bp tightening appreciates the exchange rate by about 0.35% on average, yet policy accounts for only a small share of exchange rate variability [@kearns2005; @zettelmeyer2004]
+- New Zealand: data and monetary policy surprises have large effects, and the published rate track adds about 10% explanatory power [@karagedikli2008]
+
+## Closest in design to ours
+
+- @coleman2012 compare the response of the spot rate, 2y and 5y swap rate differentials and the synthetic forward schedule in New Zealand
+- Monetary surprises move spot and the 5y swap rate by similar amounts, so forwards respond little
+- CPI and GDP surprises move spot about three times as much as the 5y rate, so forwards appreciate on stronger CPI or GDP news
+- This contrasts with standard theory and US evidence
+- We ask the same questions for South Africa, with forwards implied by CIP (see appendix)
+
+## Related literature: theory, term structure and information effects
+
+- Exchange rates and fundamentals: fundamentals help little in predicting floating exchange rates, which look close to a random walk [@engel2005; @engel2007]
+- Interest rate rules link monetary policy to the real exchange rate [@engel2004]
+- What the exchange rate response to inflation news says about monetary policy [@clarida2008]
+- Term structure responses to economic and monetary policy surprises [@gurkaynak2005d]
+- Information effects: how forward guidance is worded shapes private sector responses [@lunsford2020; @jarocinski2024a], which motivates the CBI factor
+
+## What we add
+
+- Four monetary policy factors for South Africa: Target, FG, CBI and country risk, plus data releases and US surprises
+- Responses across the term structure up to 10 years, in spot and the SA--US OIS rate gap
+- A split of the rate gap into a news-driven (predictable) and a non-news (unpredictable) part, each related to the rand
+- Local projections that show whether a surprise shifts the gap curve in parallel or tilts it
+
+## What we ask
+
+1. How do the rand and the SA--US interest rate gap respond to South African monetary policy surprises and to data releases?
+2. Does the rand respond to the **news-driven** part of the rate gap, or to the rest?
+3. Do US monetary policy surprises work through the same channel?
+
+# Data and methodology
+
+## Data and sample
+
+```{r sample-table}
+#| results: asis
+
+span <- function(x) sprintf("%s -- %s", format(min(x$date), "%b %Y"), format(max(x$date), "%b %Y"))
+
+tribble(
+  ~Data,                                              ~`Event days`,                         ~Sample,
+  "SA monetary policy surprises (Pirozhkova et al. 2024)",   format(nrow(model_data[[1]]), big.mark = ","), span(model_data[[1]]),
+  "SA data releases (CPI, GDP, unemployment)",         format(nrow(model_data[[2]]), big.mark = ","), span(model_data[[2]]),
+  "US monetary policy surprises (Jarociński 2024)",   format(nrow(model_data[[3]]), big.mark = ","), span(model_data[[3]]),
+  "ZARONIA and US OIS rates",                          "Daily",                               "",
+  "ZAR/USD spot rate",                                 "Daily",                               ""
+) |>
+  latex_table(size = 9, align = "lrr")
+```
+
+\vspace{0.3cm}
+
+- Regressions use event days only; the SA sample ends in 2024 because of ZARONIA data availability
+
+
+
+## Four surprise factors
+
+- **Target**: the immediate market reaction to the policy rate decision
+- **Forward guidance (FG)**: the response to the communicated longer-term path of policy
+- **Central bank information (CBI)**: what the announcement reveals about the central bank's view of the economy [@jarocinski2024a]
+- **Country risk (CR)**: the central bank's role in responding to external shocks in a small open economy [@pirozhkova2024a]
+- US surprises are defined in the same way, with an added large-scale asset purchase (LSAP) factor and no CR factor
+- Data release surprises: **actual minus the median analyst forecast**
+
+## Variables and units
+
+```{r units-table}
+#| results: asis
+
+tribble(
+  ~Variable,        ~Definition,                              ~Unit,
+  "Surprises",       "Policy factors and release surprises",   "pp",
+  "Spot",            "Daily log change in ZAR/USD",            "% (positive = rand depreciates)",
+  "OIS gap, tenor n", "Change in (SA OIS - US OIS)",           "pp",
+  "Forward, tenor n", "Spot change + n x change in OIS gap",   "%"
+) |>
+  latex_table(size = 9, align = "lll")
+```
+
+\vspace{0.3cm}
+
+- Coefficients read as: the response to a **1 pp** surprise
+- Tenors: 1, 2, 3, 4, 5 and 10 years
+
+<!-- TODO before presenting: confirm the unit of the MPS factors in the source files
+     (assumed basis points, converted to pp with /100 in Script 07). -->
+
+## How the rate gap relates to the rand
+
+$S$ is ZAR per USD (a rise is a weaker rand). The gap is the SA minus US OIS rate at tenor $n$:
+
+$$\text{gap}_t^{(n)} = r_t^{SA,(n)} - r_t^{US,(n)}$$ {#eq-gap}
+
+- **CIP:** the forward premium equals the gap, $\ln F^{(n)} - \ln S \approx n \times \text{gap}^{(n)}$. This ties the gap to the forward, not to spot
+- **UIP:** the expected rand depreciation equals the gap. Rearranged, with a risk premium $rp_t$ that is zero under UIP:
+
+$$\ln S_t = E_t[\ln S_{t+n}] - n \times \text{gap}_t^{(n)} + rp_t$$ {#eq-uip}
+
+- A surprise that raises the gap lowers spot today: the rand appreciates by up to $n \times \Delta\text{gap}$ if the long-run rate is unchanged, then drifts weaker (overshooting)
+- UIP fails in practice, and a surprise can also shift the long-run rate or the risk premium, so the sign and size of the response are an empirical question [@faust2003]
+
+## Forward rates are implied by the rate gap
+
+Covered interest parity links spot, forwards and the SA--US rate gap:
+
+$$\Delta \ln F_t^{(n)} = \Delta \ln S_t + n \, \Delta\left(r_t^{SA} - r_t^{US}\right)$$ {#eq-forward}
+
+- Our forwards are constructed this way, so they carry no information beyond **spot and the rate gap**
+- The focus is therefore on spot and the gap; forwards translate the gap response into exchange-rate terms
+- Multiplying by the tenor makes long forwards mechanically more sensitive than short ones
+
+## Event-study regressions
+
+$$\Delta y_t = \alpha + \beta \, s_t + \varepsilon_t$$ {#eq-event}
+
+- $y_t$: spot or OIS gap at a given tenor (forwards are in the appendix)
+- $s_t$: a monetary policy or data release surprise
+- Estimated on announcement or release days
+- Newey--West standard errors
+
+## Splitting the rate gap into predictable and unpredictable parts
+
+Step 1: regress the change in the gap on the surprise
+
+$$\Delta gap_t = \alpha + \gamma \, s_t + u_t$$ {#eq-first}
+
+- **Predictable** part: the fitted value (news-driven)
+- **Unpredictable** part: the residual
+
+Step 2: relate each part to the exchange rate
+
+$$\Delta spot_t = a + b_1 \, \widehat{gap}_t + b_2 \, \hat{u}_t + e_t$$ {#eq-second}
+
+Baseline: regress spot on the raw change in the gap
+
+## Why split the gap into predictable and unpredictable parts?
+
+- The gap moves for many reasons on an announcement day: the policy news itself, other news, risk sentiment and noise
+- **Predictable** part: the movement tied to the identified surprise, which is the interest rate channel that theory says should move the currency
+- **Unpredictable** part: everything else, including risk premia, information effects and noise. It is not clearly exogenous
+- Regressing spot on the raw gap mixes the two, so a real effect can be hidden
+- Using the predictable part is equivalent to an instrumental variable estimate with the surprise as the instrument. This assumes the surprise affects spot only through the gap, and it is unreliable when the gap barely responds to the surprise, as for Target and FG
+- Comparing the two parts shows whether the rand responds to expected interest rate differentials or to risk premia [@faust2003]
+
+# Results
+
+## SA monetary policy surprises: responses across variables
+
+```{r mps-fig}
+#| fig-width: 8
+#| fig-height: 4.6
+
+sa_news$mpc_surprises_models_gg + big
+```
+
+## SA monetary policy surprises: significant responses
+
+```{r mps-table}
+#| results: asis
+
+mps |>
+  filter(term != "(Intercept)", p.value < 0.10, !str_detect(model, "forward")) |>
+  transmute(
+    Surprise      = label_surprise(surprise_type),
+    Response      = label_response(model),
+    Coefficient   = sprintf("%.3f%s", estimate, stars(p.value)),
+    `Std. error`  = sprintf("%.3f", std.error),
+    `p-value`     = sprintf("%.3f", p.value)
+  ) |>
+  latex_table(size = 9, align = "llrrr")
+```
+
+\vspace{0.2cm}
+
+\footnotesize \* p < 0.10, \*\* p < 0.05, \*\*\* p < 0.01
+
+## SA monetary policy surprises: what stands out
+
+- A positive Target surprise is associated with rand appreciation: spot `r ci(t_spot)`
+- Forward guidance has the larger spot response: `r ci(fg_spot)`
+- Both are only borderline significant (p < 0.10)
+- CBI lowers the long-end rate gap: 10y `r ci(cbi_10y)`
+- Country risk lowers the short-to-medium gap: 2y `r ci(cr_2y)`
+- Most other responses are not distinguishable from zero in a sample of `r nrow(model_data[[1]])` announcement days
+
+## SA data releases
+
+```{r releases-fig}
+#| fig-width: 8
+#| fig-height: 4.6
+
+sa_news$data_releases_models_gg + big
+```
+
+## SA data releases: what stands out
+
+- Data releases move the rate gap more clearly than monetary policy surprises do
+- A CPI surprise raises the gap at all tenors: 2y `r ci(cpi_2y)`
+- A GDP surprise strengthens the rand: spot `r ci(gdp_spot)`, and also raises the short-to-medium gap
+- Unemployment has small effects on the gap at short tenors
+
+## US monetary policy surprises
+
+```{r us-fig}
+#| fig-width: 8
+#| fig-height: 4.6
+
+us_news$us_mpc_surprises_gg + big
+```
+
+## US monetary policy surprises: what stands out
+
+- US surprises move the SA--US gap strongly and consistently across tenors
+- Federal funds rate surprise: 1y gap `r ci(us_ffr_1y)`
+- Forward guidance: 2y gap `r ci(us_fg_2y)`, and the rand depreciates: spot `r ci(us_fg_spot)`
+- LSAP surprises lower the gap at 3y to 10y
+- This is the expected direction: a tighter US stance narrows the gap and weakens the rand
+
+## Does the rate gap explain the rand? Raw changes
+
+```{r undecomposed-table}
+#| results: asis
+
+undecomposed |>
+  transmute(
+    `OIS gap`      = label_response(model) |> str_remove("OIS gap "),
+    Coefficient    = sprintf("%.3f", estimate),
+    `Std. error`   = sprintf("%.3f", std.error),
+    `p-value`      = sprintf("%.3f", p.value),
+    `R-squared`    = sprintf("%.3f", r.squared)
+  ) |>
+  latex_table(size = 10, align = "lrrrr")
+```
+
+\vspace{0.3cm}
+
+- Raw changes in the gap do not explain spot on announcement days
+- R-squared is at most `r sprintf("%.2f", max(undecomposed$r.squared))`
+- As in the SA surprise results, the shocks that move spot (Target, FG) are not the ones that move the gap (CBI, country risk)
+
+## Predictable and unpredictable components
+
+```{r decomposed-table}
+#| results: asis
+
+diff_mod$sa_differential_decompose_models_tbl |>
+  filter(term != "(Intercept)", p.value < 0.10) |>
+  transmute(
+    Surprise      = label_surprise(surprise_type),
+    `OIS gap`     = label_response(model) |> str_remove("OIS gap "),
+    Component     = str_to_title(term),
+    Coefficient   = sprintf("%.3f%s", estimate, stars(p.value)),
+    `Std. error`  = sprintf("%.3f", std.error),
+    `p-value`     = sprintf("%.3f", p.value)
+  ) |>
+  latex_table(size = 9, align = "lllrrr")
+```
+
+\vspace{0.2cm}
+
+- Only combinations significant at 10% are shown
+- The **predictable** part is borderline significant for Target and FG because spot responds to the surprise itself. The gap is a weak first stage for these shocks, so this does not show that the gap drives spot
+- The **unpredictable** part is almost never significant
+
+## No other common underlying factors 
+
+```{r residual-fig}
+#| fig-width: 9
+#| fig-height: 4.5
+
+sa_resid$sa_residual_scatter_gg
+```
+
+- After removing the surprise from both series, spot and gap residuals do not co-move: `r sum(resid_models$p.value < 0.10)` of `r nrow(resid_models)` slopes are significant at 10%
+
+# Dynamic responses
+
+## Local projections 
+
+- Smooth local projections of each response on each surprise, one shock at a time
+- Responses are scaled to a **1 pp** surprise, with 80% confidence bands
+- Horizon is counted in **announcement events**, not days: horizon 0 is the announcement-day response
+- Later horizons show how subsequent event-day changes relate to the shock, not the persistence of the shift
+- Question: does a surprise shift the rate gap curve in **parallel**, or **tilt** it?
+- Level: the 2y OIS gap. Slope: the 10y gap minus the 2y gap
+
+<!-- TODO before presenting: the level (run_all_slp) and slope (run_slope_slp) in Scripts/13_LP.R
+     must use the same lag length P; re-run and re-check the level-versus-slope slides. -->
+     
+
+
+## Parallel shift versus tilt (illustration)
+
+```{r tilt-illustration}
+#| fig-width: 8
+#| fig-height: 3.4
+#| out-height: "55%"
+
+# Illustrative numbers only: a made-up SA - US OIS gap curve
+tenor  <- c(1, 2, 3, 4, 5, 10)
+before <- 3.0 + 0.05 * tenor
+
+bind_rows(
+  tibble(case = "Parallel shift", tenor, before, after = before + 0.4),
+  tibble(case = "Tilt",           tenor, before, after = before + 0.08 * (tenor - 2))
+) |>
+  pivot_longer(c(before, after), names_to = "curve", values_to = "gap") |>
+  mutate(curve = factor(curve, levels = c("before", "after"),
+                        labels = c("Before the surprise", "After the surprise"))) |>
+  ggplot(aes(x = tenor, y = gap, linetype = curve)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ case) +
+  scale_x_continuous(breaks = c(1, 2, 5, 10)) +
+  scale_linetype_manual(values = c("Before the surprise" = "dashed", "After the surprise" = "solid")) +
+  labs(x = "Tenor", y = "SA - US OIS gap (pp)", linetype = NULL) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  big
+```
+
+- **Parallel shift:** every tenor moves by the same amount, so the level changes and the slope does not
+- **Tilt:** tenors move by different amounts, so the slope changes; here the 2y is the pivot and stays put
+- We measure the level as the 2y gap response and the slope as the 10y minus 2y response (illustrative numbers, not estimates)
+
+## Spot responses by surprise
+
+```{r lp-spot}
+#| fig-width: 8
+#| fig-height: 4.6
+
+lp$mps_comparison_plots$change_ln_spot + big + labs(title = "Change in spot")
+```
+
+## Level: 2y OIS gap
+
+```{r lp-level}
+#| fig-width: 8
+#| fig-height: 4.6
+
+lp$mps_ois_2y_plot + big
+```
+
+## Slope: 10y minus 2y OIS gap
+
+```{r lp-slope}
+#| fig-width: 8
+#| fig-height: 4.6
+
+lp$mps_slope_plot + big
+```
+
+## Parallel shift or tilt?
+
+- **CBI** and **forward guidance** move the 2y gap with little change in the slope: closer to a parallel shift
+- The **target** surprise barely moves the 2y gap but changes the slope: a tilt, with the long end doing the moving
+- **Country risk** shows little response until late horizons
+- A zero slope response is consistent with a parallel shift, but only if the level moves
+- These are pointwise bands over many horizons; treat the results as preliminary
+
+# Conclusion
+
+## Storyline - what are we saying?
+
+1. **SA monetary policy moves the rand, but not through the gap.** Target and FG move spot (`r ci(t_spot)` and `r ci(fg_spot)`), while the gap responds to CBI and country risk instead
+2. **Domestic macro news moves rates, and growth news also moves the rand.** A CPI surprise raises the gap (2y: `r ci(cpi_2y)`); a GDP surprise raises the gap and strengthens the rand (`r ci(gdp_spot)`)
+3. **US policy transmits through the gap.** US forward guidance narrows the gap (2y: `r ci(us_fg_2y)`) and weakens the rand (`r ci(us_fg_spot)`)
+4. **The gap is a poor day-to-day explanation of the rand.** Raw gap changes explain almost none of the variation in spot (R-squared at most `r sprintf("%.2f", max(undecomposed$r.squared))`)
+
+
+## Caveats and next steps
+
+- Small sample of announcement days and borderline significance, with no correction for multiple tests
+- Forwards are implied by CIP and add no independent information; observed forwards would allow a **CIP deviation** analysis
+- Local projection results can be sensitive to lag length, and horizons are in event time
+- Level is proxied by the 2y gap; an average across tenors would separate level and slope more cleanly (debatable)
+
+## The End
+
+\vfill
+\begin{center}
+\Huge Thank you
+\end{center}
+\vfill
+
+# References {.allowframebreaks}
+\small
+
+::: {#refs}
+:::
+
+
+# Appendix
+
+
+## South African monetary policy surprises
+
+```{r sa-surprises}
+#| fig-width: 8
+#| fig-height: 4.6
+
+read_rds(here("Outputs", "artifacts_market_based_surprises.rds"))$market_based_surprises_gg 
+```
+
+
+## US monetary policy surprises: data
+
+```{r us-surprises-data}
+#| fig-width: 8
+#| fig-height: 4.6
+
+read_rds(here("Outputs", "artifacts_us_surprises.rds"))$us_surprises_gg + big 
+```
+
+## SA OIS rates
+
+```{r zaronia}
+#| fig-width: 8
+#| fig-height: 4.6
+
+read_rds(here("Outputs", "artifacts_interest_rate.rds"))$sa_ois_gg + big
+```
+
+## Forward responses to SA monetary policy surprises
+
+```{r forward-responses}
+#| fig-width: 8
+#| fig-height: 3.8
+#| out-height: "62%"
+
+mps |>
+  filter(term != "(Intercept)", str_detect(model, "forward")) |>
+  mutate(
+    surprise_type = label_surprise(surprise_type),
+    tenor   = str_extract(model, "[0-9]+y") |> str_to_upper() |>
+              factor(levels = c("1Y", "2Y", "3Y", "4Y", "5Y", "10Y")),
+    ci_low  = estimate - 1.96 * std.error,
+    ci_high = estimate + 1.96 * std.error,
+    sig     = case_when(p.value < 0.05 ~ "p < 0.05", p.value < 0.10 ~ "p < 0.10", TRUE ~ "n.s."),
+    sig     = factor(sig, levels = c("p < 0.05", "p < 0.10", "n.s."))
+  ) |>
+  ggplot(aes(x = tenor, y = estimate, color = sig, shape = surprise_type, group = surprise_type)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(ymin = ci_low, ymax = ci_high),
+                  position = position_dodge(width = 0.5), size = 0.6) +
+  scale_color_manual(values = c("p < 0.05" = "#d62728", "p < 0.10" = "#ff7f0e", "n.s." = "grey60")) +
+  labs(x = "Tenor", y = "Coefficient estimate", color = "Significance", shape = "Surprise type") +
+  theme_minimal() +
+  big
+```
+
+- Forwards are built as spot plus n times the change in the gap, so they carry no independent information
+- At short tenors they mirror the spot response; the gap component grows with the tenor
+- Shown for the SA monetary policy surprises only
+
+## Descriptive statistics
+
+```{r descriptive}
+#| results: asis
+
+joint$descriptive_statistics_tbl |>
+  mutate(series = label_response(series)) |>
+  mutate(across(where(is.numeric) & !Observations, ~ sprintf("%.3f", .x)),
+         Observations = format(Observations, big.mark = ",")) |>
+  rename(Series = series) |>
+  latex_table(size = 7, align = "lrrrrrr")
+```
+
+

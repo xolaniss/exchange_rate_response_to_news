@@ -31,7 +31,7 @@ mpc_surprises_models_gg <-
                                     "country_risk" = "Country risk")), 
     model         = str_remove(model, "_models$"),
     var_type = case_when(
-      str_detect(model, "ois")     ~ "Interest rate differential",
+      str_detect(model, "ois")     ~ "Interest rate gap",
       str_detect(model, "forward") ~ "Forward rate",
       TRUE                          ~ "Spot rate"
     ),
@@ -53,14 +53,15 @@ mpc_surprises_models_gg <-
       TRUE           ~ "n.s."
     ),
     sig_level = fct_relevel(sig_level, "p < 0.05", "p < 0.10", "n.s."),
-    var_type = fct_relevel(var_type, "Spot rate", "Interest rate differential", "Forward rate")
+    var_type = fct_relevel(var_type, "Spot rate", "Interest rate gap", "Forward rate")
   ) |> 
+  filter(!var_type == "Forward rate") |> 
   ggplot(aes(x = tenor, y = estimate, color = sig_level, group = surprise_type)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_pointrange(aes(ymin = ci_low, ymax = ci_high, shape = surprise_type),
                   position = position_dodge(width = 0.5), size = 0.6) +
   scale_color_manual(values = c("p < 0.05" = "#d62728", "p < 0.10" = "#ff7f0e", "n.s." = "grey60")) +
-  facet_wrap(~ var_type, scales = "free", ncol = 3) +
+  facet_wrap(~ var_type, scales = "free", nrow = 2) +
   labs(x = "Tenor", y = "Coefficient estimate",
        color = "Significance", shape = "Surprise type",
        title = "Term-structure of market responses to MPC surprise factors") +
@@ -110,7 +111,7 @@ data_releases_models_gg <-
                     str_to_title(),
     model         = str_remove(model, "_models$"),
     var_type = case_when(
-      str_detect(model, "ois")     ~ "Interest rate differential",
+      str_detect(model, "ois")     ~ "Interest rate gap",
       str_detect(model, "forward") ~ "Forward rate",
       TRUE                          ~ "Spot rate"
     ),
@@ -133,14 +134,15 @@ data_releases_models_gg <-
       TRUE           ~ "n.s."
     ),
     sig_level = fct_relevel(sig_level, "p < 0.05", "p < 0.10", "n.s."),
-    var_type  = fct_relevel(var_type, "Spot rate", "Interest rate differential", "Forward rate")
+    var_type  = fct_relevel(var_type, "Spot rate", "Interest rate gap", "Forward rate")
   ) |> 
+  filter(!var_type == "Forward rate") |> 
   ggplot(aes(x = tenor, y = estimate, color = sig_level, group = surprise_type)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_pointrange(aes(ymin = ci_low, ymax = ci_high, shape = surprise_type),
                   position = position_dodge(width = 0.5), size = 0.6) +
   scale_color_manual(values = c("p < 0.05" = "#d62728", "p < 0.10" = "#ff7f0e", "n.s." = "grey60")) +
-  facet_wrap(~ var_type, scales = "free", ncol = 3) +
+  facet_wrap(~ var_type, scales = "free", nrow = 2) +
   labs(x = "Tenor", y = "Coefficient estimate",
        color = "Significance", shape = "Surprise type",
        title = "Term-structure of market responses to data release surprises") +
