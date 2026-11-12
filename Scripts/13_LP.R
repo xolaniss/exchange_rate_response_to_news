@@ -220,7 +220,13 @@ mps_slope_irf_tbl <-
       Upper    = ir$irc[, 2]
     )
   }) |> 
-  dplyr::bind_rows()
+  dplyr::bind_rows() |> 
+  mutate(
+    shock = str_replace_all(shock, "target", "Target"),
+    shock = str_replace_all(shock, "central_bank_information", "Central Bank Information"),
+    shock = str_replace_all(shock, "country_risk", "Country Risk"),
+    shock = str_replace_all(shock, "forward_guidance", "Forward Guidance")
+  )
 
 mps_slope_gg <- 
   ggplot(mps_slope_irf_tbl, aes(x = Horizon, y = Response, color = shock, fill = shock)) +
@@ -264,13 +270,19 @@ plot_irf_by_shock <- function(irf_tbl, y_label, title) {
     theme(legend.position = "none")
 }
 
-mps_ois_2y_irf_tbl <- extract_irf(mps_all_slp, "2y", "change_ois_2y")
+mps_ois_2y_irf_tbl <- extract_irf(mps_all_slp, "2y", "change_ois_2y") |> 
+  mutate(
+    shock = str_replace_all(shock, "target", "Target"),
+    shock = str_replace_all(shock, "central_bank_information", "Central Bank Information"),
+    shock = str_replace_all(shock, "country_risk", "Country Risk"),
+    shock = str_replace_all(shock, "forward_guidance", "Forward Guidance")
+  )
 
 mps_ois_2y_gg <- 
   plot_irf_by_shock(
     mps_ois_2y_irf_tbl,
-    y_label = "Response of 2y OIS differential (pp) per 1 pp shock",
-    title   = "2y OIS differential (SA - US)"
+    y_label = "Response of 2y OIS gap (pp) per 1 pp shock",
+    title   = "2y OIS gap (SA - US)"
   )
 
 mps_ois_2y_gg

@@ -34,6 +34,7 @@ format:
       - \let\oldsection\section
       - \renewcommand{\section}{\ifnum\value{section}=5 \appendix\fi\oldsection}
     institute: "South Africa Reserve Bank"
+    keep-tex: true
 authors:
   - name: Xolani Sibande
     affiliation:
@@ -549,7 +550,7 @@ bind_rows(
 lp$mps_comparison_plots$change_ln_spot + big + labs(title = "Change in spot")
 ```
 
-## Level: 2y OIS gap
+## Level: 2y interest gap
 
 ```{r lp-level}
 #| fig-width: 8
@@ -558,7 +559,7 @@ lp$mps_comparison_plots$change_ln_spot + big + labs(title = "Change in spot")
 lp$mps_ois_2y_plot + big
 ```
 
-## Slope: 10y minus 2y OIS gap
+## Slope: 10y minus 2y interest gap
 
 ```{r lp-slope}
 #| fig-width: 8
@@ -573,7 +574,7 @@ lp$mps_slope_plot + big
 - The **target** surprise barely moves the 2y gap but changes the slope: a tilt, with the long end doing the moving
 - **Country risk** shows little response until late horizons
 - A zero slope response is consistent with a parallel shift, but only if the level moves
-- These are pointwise bands over many horizons; treat the results as preliminary
+
 
 # Conclusion
 
